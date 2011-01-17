@@ -1,0 +1,5 @@
+The code in this directory was generated using wxFormBuilder version
+3.1.68-rc1. The idea is that we subclass the MainWindow class somewhere,
+so that we don't touch the generated code, allowing us to modify it inside
+wxFormBuilder without affecting the main code, if we don't count widget
+renaming and deletion.
