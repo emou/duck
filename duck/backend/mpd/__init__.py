@@ -12,7 +12,7 @@ from duck.backend import BaseBackend
 from duck.errors import BackendInitializeError
 from duck.utils import Calculations
 from duck.backend.mpd.song import Song
-from threading import Lock
+from threading import Event
 
 class Backend(BaseBackend):
     """
@@ -26,8 +26,6 @@ class Backend(BaseBackend):
 
     def __init__(self, options=None):
         self.options = Backend.default_options.copy()
-        self.lock = Lock()
-        self.idle_lock = Lock()
         if options:
             self.options.update(options)
         self.client = MPDClient()
@@ -43,9 +41,10 @@ class Backend(BaseBackend):
                 'Are your host/port settings correct?',
             ]
             raise BackendInitializeError('\n'.join(msg))
-        self.lock.acquire()
-        #self.idle_lock.acquire()
-        self.idle()
+        self.idle_request = Event()
+        self.idle_request.clear()
+        self.idle_ready = Event()
+        self.idle_ready.clear()
 
     def play(self):
         self.client.play()
@@ -65,46 +64,45 @@ class Backend(BaseBackend):
     def seek(self, xpercent):
         self.client.seek(self.current_song.id,
                          Calculations.intpercent(xpercent, self.current_song.time))
-    
+
+    # Thread-safe.
     def idle(self):
         """
         Main thread marks it's idle.
         """
+        print '\nsending idle'
         self.client.send_idle()
-        self.is_idle = True
-        self.idle_lock.acquire()
-        self.lock.release()
-    
+        print 'setting idle_request to true...\n'
+        self.idle_request.set()
+
+    # Thread-safe.
     def idle_wait(self):
         """
         Notification thread blocks on socket.
         """
-        self.lock.acquire()
-        self.lock.release()
+        print 'wait for idle_request...'
+        self.idle_request.wait()
+        self.idle_request.clear()
+        print 'Polling for changes...'
         select.select([self.client], [], [])
-    
+
+    # Thread-safe.
     def idle_wokeup(self):
         """
-        Notification thread woke up. 
+        Notification thread woke up.
         """
-        self.idle_lock.acquire()
-        self.idle_lock.release()
- 
+        pass
+
+    # Thread-safe.
     def noidle(self):
         """
         Main thread marks it's not idle anymore.
         """
-        print 'noidle...'
-        self.lock.acquire()
-        self.idle_lock.release()
-        self.is_idle = False
-        print 'Sending noidle...'
         self.client.send_noidle()
-        print 'Sent noidle.'
-        print 'Reading idle data...'
+        print 'Fetching changes and cancelling idle mode...'
         data = self.client.fetch_idle()
         return data
-    
+
     def fetch_changes(self):
         return self.client.fetch_idle()
 

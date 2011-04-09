@@ -33,18 +33,22 @@ class IdleThread(Thread):
 
     def run(self):
         while(self.should_run):
+            print 'waiting for idle'
             self.backend.idle_wait()
-            # Post the event only if main thread is idle.
-            # Otherwise, it will take care of processing the result.
-            if self.backend.is_idle:
-                wx.PostEvent(self.window, IdleEvent())
+            print 'woke up!'
+            wx.PostEvent(self.window, IdleEvent())
             self.backend.idle_wokeup()
-    
+
     def stop(self):
         self.should_run = False
 
 def command(func):
     def decorated(self, *args, **kwargs):
+        # Indicate that the idle handler should skip the event from the idle
+        # thread on the next pass, because we would have taken care of the idle
+        # changes here.
+        print 'Command %s ' % func.__name__[3:]
+        self.skip_idle = True
         self.handle_changes(self.backend.noidle())
         ret = func(self, *args, **kwargs)
         self.backend.idle()
@@ -59,14 +63,23 @@ class DuckWindow(MainWindow):
         self.idle_thread = IdleThread(self.backend, self)
         self.Connect(-1, -1, IdleEvent.IDLE_EVENT_ID, self.do_changes)
         self.idle_thread.start()
- 
+        self.skip_idle = False
+        self.backend.idle()
+
     def handle_changes(self, changes):
         if changes:
             print changes
 
-    @command
+    # XXX: This is MPD-specific. Move it to the backend somehow?
     def do_changes(self, event):
-        pass
+        """
+        Event handler for idle events (changes to MPD state).
+        """
+        print 'got an event...'
+        if not self.skip_idle:
+            self.handle_changes(self.backend.noidle())
+            self.backend.idle()
+        self.skip_idle = False
 
     @command
     def do_previous(self, event):
