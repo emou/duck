@@ -1,4 +1,6 @@
-from duck.backend import BackendError
+import sys
+
+from duck.errors import BackendError
 
 class BaseFrontend(object):
     """
@@ -19,7 +21,11 @@ class BaseFrontend(object):
 
     def handle_error(self, e):
         """
-        A default error handler: display it on stderr.
+        A default error handler: display it on stderr and exit.
         """
-        import sys
-        sys.stderr.write(str(e))
+        sys.stderr.write('%s\n' % e)
+        try:
+            errcode = e.errcode
+        except AttributeError:
+            errcode = 1
+        sys.exit(errcode)

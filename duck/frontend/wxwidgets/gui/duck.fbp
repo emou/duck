@@ -82,18 +82,18 @@
             <object class="wxFlexGridSizer" expanded="1">
                 <property name="cols">2</property>
                 <property name="flexible_direction">wxBOTH</property>
-                <property name="growablecols"></property>
-                <property name="growablerows"></property>
+                <property name="growablecols">0</property>
+                <property name="growablerows">0</property>
                 <property name="hgap">0</property>
-                <property name="minimum_size"></property>
+                <property name="minimum_size">-1,-1</property>
                 <property name="name">main_sizer</property>
-                <property name="non_flexible_grow_mode">wxFLEX_GROWMODE_SPECIFIED</property>
+                <property name="non_flexible_grow_mode">wxFLEX_GROWMODE_ALL</property>
                 <property name="permission">none</property>
                 <property name="rows">2</property>
                 <property name="vgap">0</property>
                 <object class="sizeritem" expanded="1">
                     <property name="border">5</property>
-                    <property name="flag">wxEXPAND | wxALL</property>
+                    <property name="flag">wxALL|wxEXPAND</property>
                     <property name="proportion">1</property>
                     <object class="wxNotebook" expanded="1">
                         <property name="bg"></property>
@@ -106,7 +106,7 @@
                         <property name="hidden">0</property>
                         <property name="id">wxID_ANY</property>
                         <property name="maximum_size"></property>
-                        <property name="minimum_size">700,500</property>
+                        <property name="minimum_size">600,400</property>
                         <property name="name">notebook</property>
                         <property name="permission">protected</property>
                         <property name="pos"></property>
@@ -205,13 +205,13 @@
                                     <property name="hgap">0</property>
                                     <property name="minimum_size"></property>
                                     <property name="name">now_playing_sizer</property>
-                                    <property name="non_flexible_grow_mode">wxFLEX_GROWMODE_SPECIFIED</property>
+                                    <property name="non_flexible_grow_mode">wxFLEX_GROWMODE_ALL</property>
                                     <property name="permission">none</property>
                                     <property name="rows">3</property>
                                     <property name="vgap">0</property>
                                     <object class="sizeritem" expanded="1">
                                         <property name="border">5</property>
-                                        <property name="flag">wxEXPAND</property>
+                                        <property name="flag"></property>
                                         <property name="proportion">1</property>
                                         <object class="wxBoxSizer" expanded="1">
                                             <property name="minimum_size"></property>
@@ -510,7 +510,7 @@
                                             <event name="OnRightDClick"></event>
                                             <event name="OnRightDown"></event>
                                             <event name="OnRightUp"></event>
-                                            <event name="OnScroll"></event>
+                                            <event name="OnScroll">do_seek</event>
                                             <event name="OnScrollBottom"></event>
                                             <event name="OnScrollChanged"></event>
                                             <event name="OnScrollLineDown"></event>
@@ -527,7 +527,7 @@
                                     </object>
                                     <object class="sizeritem" expanded="1">
                                         <property name="border">5</property>
-                                        <property name="flag">wxALL|wxEXPAND</property>
+                                        <property name="flag">wxEXPAND</property>
                                         <property name="proportion">1</property>
                                         <object class="wxListCtrl" expanded="1">
                                             <property name="bg"></property>

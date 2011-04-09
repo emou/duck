@@ -21,15 +21,17 @@ class MainWindow ( wx.Frame ):
 		self.SetSizeHintsSz( wx.Size( -1,-1 ), wx.DefaultSize )
 		
 		main_sizer = wx.FlexGridSizer( 2, 2, 0, 0 )
+		main_sizer.AddGrowableCol( 0 )
+		main_sizer.AddGrowableRow( 0 )
 		main_sizer.SetFlexibleDirection( wx.BOTH )
-		main_sizer.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+		main_sizer.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_ALL )
 		
 		self.notebook = wx.Notebook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 		notebookImageSize = wx.Size( 24,24 )
 		notebookIndex = 0
 		notebookImages = wx.ImageList( notebookImageSize.GetWidth(), notebookImageSize.GetHeight() )
 		self.notebook.AssignImageList( notebookImages )
-		self.notebook.SetMinSize( wx.Size( 700,500 ) )
+		self.notebook.SetMinSize( wx.Size( 600,400 ) )
 		
 		self.now_playing_page = wx.Panel( self.notebook, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		now_playing_sizer = wx.FlexGridSizer( 3, 1, 0, 0 )
@@ -38,7 +40,7 @@ class MainWindow ( wx.Frame ):
 		now_playing_sizer.AddGrowableCol( 2 )
 		now_playing_sizer.AddGrowableRow( 2 )
 		now_playing_sizer.SetFlexibleDirection( wx.BOTH )
-		now_playing_sizer.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+		now_playing_sizer.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_ALL )
 		
 		playing_buttons_sizer = wx.BoxSizer( wx.HORIZONTAL )
 		
@@ -54,13 +56,13 @@ class MainWindow ( wx.Frame ):
 		self.next_button = wx.Button( self.now_playing_page, wx.ID_ANY, u"NEXT", wx.DefaultPosition, wx.DefaultSize, 0 )
 		playing_buttons_sizer.Add( self.next_button, 0, 0, 5 )
 		
-		now_playing_sizer.Add( playing_buttons_sizer, 1, wx.EXPAND, 5 )
+		now_playing_sizer.Add( playing_buttons_sizer, 1, 0, 5 )
 		
 		self.progress_slider = wx.Slider( self.now_playing_page, wx.ID_ANY, 50, 0, 100, wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
 		now_playing_sizer.Add( self.progress_slider, 0, wx.ALL|wx.EXPAND, 5 )
 		
 		self.playlist = wx.ListCtrl( self.now_playing_page, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_ICON|wx.LC_REPORT )
-		now_playing_sizer.Add( self.playlist, 1, wx.ALL|wx.EXPAND, 5 )
+		now_playing_sizer.Add( self.playlist, 1, wx.EXPAND, 5 )
 		
 		self.now_playing_page.SetSizer( now_playing_sizer )
 		self.now_playing_page.Layout()
@@ -71,7 +73,7 @@ class MainWindow ( wx.Frame ):
 		self.page_devices = wx.Panel( self.notebook, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.notebook.AddPage( self.page_devices, u"External devices", False )
 		
-		main_sizer.Add( self.notebook, 1, wx.EXPAND |wx.ALL, 5 )
+		main_sizer.Add( self.notebook, 1, wx.ALL|wx.EXPAND, 5 )
 		
 		self.SetSizer( main_sizer )
 		self.Layout()
@@ -100,6 +102,7 @@ class MainWindow ( wx.Frame ):
 		self.play_button.Bind( wx.EVT_BUTTON, self.do_play )
 		self.stop_button.Bind( wx.EVT_BUTTON, self.do_stop )
 		self.next_button.Bind( wx.EVT_BUTTON, self.do_next )
+		self.progress_slider.Bind( wx.EVT_SCROLL, self.do_seek )
 	
 	def __del__( self ):
 		pass
@@ -116,6 +119,9 @@ class MainWindow ( wx.Frame ):
 		event.Skip()
 	
 	def do_next( self, event ):
+		event.Skip()
+	
+	def do_seek( self, event ):
 		event.Skip()
 	
 

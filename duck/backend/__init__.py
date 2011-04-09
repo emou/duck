@@ -28,17 +28,3 @@ class BaseBackend(object):
     def previous(self):
         raise NotImplementedError()
 
-class BackendError(Exception):
-    """
-    A base error in the backend.
-    """
-    errcode = 255
-
-class BackendInitializeError(BackendError):
-    """
-    An error during backend initialization, i.e.
-    could not connect to server, could not import
-    a module, etc.
-    """
-    errcode = 254
-
