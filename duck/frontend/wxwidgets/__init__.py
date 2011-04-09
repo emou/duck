@@ -13,44 +13,82 @@ class IdleEvent(wx.PyEvent):
     An event representing an MPD status change.
     """
 
-    EVT_RESULT_ID = wx.NewId()
+    IDLE_EVENT_ID = wx.NewId()
 
-    def __init__(self, changes):
-        self.changes = changes
+    def __init__(self):
         wx.PyEvent.__init__(self)
-        self.SetEventType(self.EVT_RESULT_ID)
-
+        self.SetEventType(self.IDLE_EVENT_ID)
 
 class IdleThread(Thread):
-    def __init__(self, frontend):
-        pass
+    """
+    The thread that checks for MPD status change.
+    """
+
+    def __init__(self, backend, window):
+        Thread.__init__(self)
+        self.setDaemon(True)
+        self.backend = backend
+        self.window = window
+        self.should_run = True
 
     def run(self):
-        while(True):
-            pass
+        while(self.should_run):
+            self.backend.idle_wait()
+            # Post the event only if main thread is idle.
+            # Otherwise, it will take care of processing the result.
+            if self.backend.is_idle:
+                wx.PostEvent(self.window, IdleEvent())
+            self.backend.idle_wokeup()
+    
+    def stop(self):
+        self.should_run = False
+
+def command(func):
+    def decorated(self, *args, **kwargs):
+        self.handle_changes(self.backend.noidle())
+        ret = func(self, *args, **kwargs)
+        self.backend.idle()
+        return ret
+    return decorated
 
 class DuckWindow(MainWindow):
     def __init__(self, *args, **kwargs):
         assert 'backend' in kwargs
         self.backend = kwargs.pop('backend')
         MainWindow.__init__(self, *args, **kwargs)
-        self.backend.idle()
+        self.idle_thread = IdleThread(self.backend, self)
+        self.Connect(-1, -1, IdleEvent.IDLE_EVENT_ID, self.do_changes)
+        self.idle_thread.start()
+ 
+    def handle_changes(self, changes):
+        if changes:
+            print changes
 
+    @command
+    def do_changes(self, event):
+        pass
+
+    @command
     def do_previous(self, event):
-        backend.previous()
+        self.backend.previous()
 
+    @command
     def do_play(self, event):
-        backend.play()
+        self.backend.play()
 
+    @command
     def do_stop(self, event):
-        backend.stop()
+        self.backend.stop()
 
+    @command
     def do_next(self, event):
-        backend.next()
+        print 'do_next'
+        self.backend.next()
 
+    @command
     def do_seek(self, event):
         position = event.GetPosition()
-        backend.seek(position)
+        self.backend.seek(position)
 
 class Frontend(BaseFrontend):
     """

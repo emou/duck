@@ -11,11 +11,8 @@ class TestCase(unittest.TestCase):
         self.backend.disconnect()
         self.backend = None
 
-    def test_backend(self):
-        import select
-        self.backend.client.send_idle()
-        select.select([self.backend.client], [], [])
-        print self.backend.client.fetch_idle()
+    def test_backend_idle(self):
+        print self.backend.idle()
 
 if __name__ == '__main__':
     unittest.main()

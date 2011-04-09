@@ -2,10 +2,10 @@
 This modules contains the base class for a Backend:
 an object that does the actual control.
 At this point we don't care what it actually does.
-It could for example:
+In theory it could for example:
     * Talk to a server, like MPD
     * Run an external program, like mplayer
-    * Print pages on a printer :)
+    * Use a local playing engine
 """
 
 class BaseBackend(object):

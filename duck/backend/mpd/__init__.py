@@ -1,15 +1,18 @@
 try:
-    from mpd import MPDClient, MPDError
+    from mpd import MPDClient, MPDError, PendingCommandError, ConnectionError
 except ImportError:
     raise BackendInitializeError('Python mpd client library could not be found. '
                                  'Is python-mpd installed?')
+import select
 import socket
+import time
 
 import duck.backend
 from duck.backend import BaseBackend
 from duck.errors import BackendInitializeError
 from duck.utils import Calculations
 from duck.backend.mpd.song import Song
+from threading import Lock
 
 class Backend(BaseBackend):
     """
@@ -23,6 +26,8 @@ class Backend(BaseBackend):
 
     def __init__(self, options=None):
         self.options = Backend.default_options.copy()
+        self.lock = Lock()
+        self.idle_lock = Lock()
         if options:
             self.options.update(options)
         self.client = MPDClient()
@@ -35,8 +40,12 @@ class Backend(BaseBackend):
                 '%(host)s:%(port)s.' % self.options,
                 'Returned error was: %s.' % e,
                 'Did you forget to install or start the mpd server?',
+                'Are your host/port settings correct?',
             ]
             raise BackendInitializeError('\n'.join(msg))
+        self.lock.acquire()
+        #self.idle_lock.acquire()
+        self.idle()
 
     def play(self):
         self.client.play()
@@ -58,9 +67,45 @@ class Backend(BaseBackend):
                          Calculations.intpercent(xpercent, self.current_song.time))
     
     def idle(self):
-        import select
+        """
+        Main thread marks it's idle.
+        """
         self.client.send_idle()
+        self.is_idle = True
+        self.idle_lock.acquire()
+        self.lock.release()
+    
+    def idle_wait(self):
+        """
+        Notification thread blocks on socket.
+        """
+        self.lock.acquire()
+        self.lock.release()
         select.select([self.client], [], [])
+    
+    def idle_wokeup(self):
+        """
+        Notification thread woke up. 
+        """
+        self.idle_lock.acquire()
+        self.idle_lock.release()
+ 
+    def noidle(self):
+        """
+        Main thread marks it's not idle anymore.
+        """
+        print 'noidle...'
+        self.lock.acquire()
+        self.idle_lock.release()
+        self.is_idle = False
+        print 'Sending noidle...'
+        self.client.send_noidle()
+        print 'Sent noidle.'
+        print 'Reading idle data...'
+        data = self.client.fetch_idle()
+        return data
+    
+    def fetch_changes(self):
         return self.client.fetch_idle()
 
     @property
@@ -75,6 +120,6 @@ class Backend(BaseBackend):
         try:
             self.client.disconnect()
         except (MPDError, IOError):
-            # Just use a new client
+            # This guy is corrupted. Use a new one.
             self.client = MPDClient()
 
