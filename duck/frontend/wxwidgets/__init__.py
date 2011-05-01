@@ -6,7 +6,11 @@ except ImportError:
 
 from duck.frontend import BaseFrontend
 from duck.errors import FrontendInitializeError
+from duck.log import loggers
 from gui.noname import MainWindow
+
+logger = loggers.main
+idle_logger = loggers.idle
 
 class IdleEvent(wx.PyEvent):
     """
@@ -33,15 +37,16 @@ class IdleThread(Thread):
 
     def run(self):
         while(self.should_run):
-            print 'waiting for idle'
+            idle_logger.debug('waiting for idle')
             self.backend.idle_wait()
-            print 'woke up!'
+            idle_logger.debug('woke up!')
             wx.PostEvent(self.window, IdleEvent())
             self.backend.idle_wokeup()
 
     def stop(self):
         self.should_run = False
 
+import traceback
 def command(func):
     def decorated(self, *args, **kwargs):
         # Indicate that the idle handler should skip the event from the idle
@@ -49,10 +54,18 @@ def command(func):
         # changes here.
         self.skip_idle = True
         self.handle_changes(self.backend.noidle())
+        logger.debug('after handle_changes')
         ret = func(self, *args, **kwargs)
+        logger.debug('calling func ', func.__name__)
+        logger.debug('Ha!')
+        logger.debug(''.join(traceback.format_stack()))
+        logger.debug('=================')
+        logger.debug('=================')
         # XXX: Should optimize this.
         self.update_status()
+        logger.debug('after update status.. going idle.')
         self.backend.idle()
+        logger.debug('went idle')
         return ret
     return decorated
 
@@ -86,7 +99,7 @@ class DuckWindow(MainWindow):
 
     def handle_changes(self, changes):
         if changes:
-            print changes
+            logger.debug(changes)
         self.update_status()
 
     # XXX: This is MPD-specific. Move it to the backend somehow?
@@ -94,7 +107,7 @@ class DuckWindow(MainWindow):
         """
         Event handler for idle events (changes to MPD state).
         """
-        print 'got an event...'
+        logger.debug('got an event...')
         if not self.skip_idle:
             self.handle_changes(self.backend.noidle())
             self.backend.idle()
@@ -115,43 +128,41 @@ class DuckWindow(MainWindow):
 
     @command
     def do_next(self, event):
-        print 'do_next'
+        logger.debug('do_next')
         self.backend.next()
 
     @command
     def do_seek(self, event):
-        print event.GetEventType()
+        logger.debug(event.GetEventType())
         slider = event.GetEventObject()
         self.backend.seek(slider.GetValue())
         self.update_slider = False
 
     @command
     def do_volume_set(self, event):
-        print event.GetEventType()
+        logger.debug(event.GetEventType())
         #slider = event.GetEventObject()
         #self.backend.setvol(slider.GetValue())
  
     def update_status(self):
-        print 'Updating status...'
-        s = self.backend.get_status()
-        state = s['state']
-        if state != self.state:
-            getattr(self, 'on_' + state)()
-            self.state = state
+        logger.debug('Updating status...')
+        state = self.backend.get_status()['state']
+        getattr(self, 'on_' + state)()
+        self.state = state
         if state != 'stop':
             self.common_update()
 
     def common_update(self):
-        pass
-
-    def on_play(self):
-        print 'elapsed time: %s' % self.backend.elapsed_time
+        logger.debug('elapsed time: %s' % self.backend.elapsed_time)
         if self.update_slider:
             self.progress_slider.SetRange(0, self.backend.time)
         else:
             self.update_slider = False
         self.progress_slider.SetValue(self.backend.elapsed_time)
         self.progress_timer.Start(1000, oneShot=False)
+
+    def on_play(self):
+        pass
 
     def on_stop(self):
         self.stop_timer()

@@ -12,7 +12,11 @@ from duck.backend import BaseBackend
 from duck.errors import BackendInitializeError
 from duck.utils import Calculations
 from duck.backend.mpd.song import Song
+from duck.log import loggers
 from threading import Event
+
+idle_logger = loggers.idle
+logger = loggers.main
 
 class Backend(BaseBackend):
     """
@@ -71,19 +75,19 @@ class Backend(BaseBackend):
         """
         Main thread marks it's idle.
         """
-        print '\nsending idle'
+        idle_logger.debug('\nsending idle')
         self.client.send_idle()
-        print 'setting idle_request to true...\n'
+        idle_logger.debug('setting idle_request to true...\n')
         self.idle_request.set()
 
     def idle_wait(self):
         """
         Notification thread blocks on socket.
         """
-        print 'wait for idle_request...'
+        idle_logger.debug('wait for idle_request...')
         self.idle_request.wait()
         self.idle_request.clear()
-        print 'Polling for changes...'
+        idle_logger.debug('Polling for changes...')
         select.select([self.client], [], [])
 
     def idle_wokeup(self):
@@ -97,7 +101,7 @@ class Backend(BaseBackend):
         Main thread marks it's not idle anymore.
         """
         self.client.send_noidle()
-        print 'Fetching changes and cancelling idle mode...'
+        idle_logger.debug('Fetching changes and cancelling idle mode...')
         data = self.client.fetch_idle()
         return data
 
@@ -110,7 +114,7 @@ class Backend(BaseBackend):
     def current_song(self):
         song_dict = self.client.currentsong()
         if song_dict:
-            print song_dict
+            logger.debug(song_dict)
             return Song(song_dict)
     
     def get_status(self):
