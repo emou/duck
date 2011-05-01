@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Jan 16 2011)
+## Python code generated with wxFormBuilder (version Apr 10 2011)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -45,18 +45,27 @@ class MainWindow ( wx.Frame ):
 		playing_buttons_sizer = wx.BoxSizer( wx.HORIZONTAL )
 		
 		self.previous_button = wx.Button( self.now_playing_page, wx.ID_ANY, u"PREV", wx.DefaultPosition, wx.DefaultSize, 0 )
-		playing_buttons_sizer.Add( self.previous_button, 0, 0, 5 )
+		playing_buttons_sizer.Add( self.previous_button, 0, wx.ALIGN_CENTER, 5 )
 		
 		self.play_button = wx.Button( self.now_playing_page, wx.ID_ANY, u"PLAY", wx.DefaultPosition, wx.DefaultSize, 0 )
-		playing_buttons_sizer.Add( self.play_button, 0, 0, 5 )
+		playing_buttons_sizer.Add( self.play_button, 0, wx.ALIGN_CENTER, 5 )
 		
 		self.stop_button = wx.Button( self.now_playing_page, wx.ID_ANY, u"STOP", wx.DefaultPosition, wx.DefaultSize, 0 )
-		playing_buttons_sizer.Add( self.stop_button, 0, 0, 5 )
+		playing_buttons_sizer.Add( self.stop_button, 0, wx.ALIGN_CENTER, 5 )
 		
 		self.next_button = wx.Button( self.now_playing_page, wx.ID_ANY, u"NEXT", wx.DefaultPosition, wx.DefaultSize, 0 )
-		playing_buttons_sizer.Add( self.next_button, 0, 0, 5 )
+		playing_buttons_sizer.Add( self.next_button, 0, wx.ALIGN_CENTER, 5 )
 		
-		now_playing_sizer.Add( playing_buttons_sizer, 1, 0, 5 )
+		volume_sizer = wx.BoxSizer( wx.VERTICAL )
+		
+		self.volume_slider = wx.Slider( self.now_playing_page, wx.ID_ANY, 50, 0, 100, wx.DefaultPosition, wx.DefaultSize, wx.SL_HORIZONTAL )
+		self.volume_slider.SetMinSize( wx.Size( 150,-1 ) )
+		
+		volume_sizer.Add( self.volume_slider, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
+		
+		playing_buttons_sizer.Add( volume_sizer, 1, wx.ALIGN_RIGHT|wx.EXPAND, 5 )
+		
+		now_playing_sizer.Add( playing_buttons_sizer, 1, wx.EXPAND, 5 )
 		
 		self.progress_slider = wx.Slider( self.now_playing_page, wx.ID_ANY, 50, 0, 100, wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
 		now_playing_sizer.Add( self.progress_slider, 0, wx.ALL|wx.EXPAND, 5 )
@@ -102,7 +111,6 @@ class MainWindow ( wx.Frame ):
 		self.play_button.Bind( wx.EVT_BUTTON, self.do_play )
 		self.stop_button.Bind( wx.EVT_BUTTON, self.do_stop )
 		self.next_button.Bind( wx.EVT_BUTTON, self.do_next )
-		self.progress_slider.Bind( wx.EVT_SCROLL, self.do_seek )
 	
 	def __del__( self ):
 		pass
@@ -119,9 +127,6 @@ class MainWindow ( wx.Frame ):
 		event.Skip()
 	
 	def do_next( self, event ):
-		event.Skip()
-	
-	def do_seek( self, event ):
 		event.Skip()
 	
 

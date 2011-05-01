@@ -43,8 +43,6 @@ class Backend(BaseBackend):
             raise BackendInitializeError('\n'.join(msg))
         self.idle_request = Event()
         self.idle_request.clear()
-        self.idle_ready = Event()
-        self.idle_ready.clear()
 
     def play(self):
         self.client.play()
@@ -61,11 +59,14 @@ class Backend(BaseBackend):
     def previous(self):
         self.client.previous()
 
-    def seek(self, xpercent):
-        self.client.seek(self.current_song.id,
-                         Calculations.intpercent(xpercent, self.current_song.time))
+    def seek(self, value):
+        self.client.seek(self.current_song.id, value)
 
-    # Thread-safe.
+    def setvol(self, value):
+        self.client.setvol(value)
+
+    # {{ Methods dealing with idle mode and thread synchronization.
+
     def idle(self):
         """
         Main thread marks it's idle.
@@ -75,7 +76,6 @@ class Backend(BaseBackend):
         print 'setting idle_request to true...\n'
         self.idle_request.set()
 
-    # Thread-safe.
     def idle_wait(self):
         """
         Notification thread blocks on socket.
@@ -86,14 +86,12 @@ class Backend(BaseBackend):
         print 'Polling for changes...'
         select.select([self.client], [], [])
 
-    # Thread-safe.
     def idle_wokeup(self):
         """
         Notification thread woke up.
         """
         pass
 
-    # Thread-safe.
     def noidle(self):
         """
         Main thread marks it's not idle anymore.
@@ -106,9 +104,27 @@ class Backend(BaseBackend):
     def fetch_changes(self):
         return self.client.fetch_idle()
 
+    # }}
+
     @property
     def current_song(self):
-        return Song(self.client.currentsong())
+        song_dict = self.client.currentsong()
+        if song_dict:
+            print song_dict
+            return Song(song_dict)
+    
+    def get_status(self):
+        self.status = self.client.status()
+        self.memo = {}
+        return self.status
+ 
+    @property
+    def elapsed_time(self):
+        return int(self.status['time'].split(':')[0])
+
+    @property
+    def time(self):
+        return int(self.status['time'].split(':')[1])
 
     def disconnect(self):
         try:
