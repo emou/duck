@@ -25,63 +25,69 @@
 								<orient>wxHORIZONTAL</orient>
 								<object class="sizeritem">
 									<option>0</option>
-									<flag>wxALL</flag>
+									<flag></flag>
 									<border>5</border>
 									<object class="wxBitmapButton" name="previous_button">
-										<style>wxBU_AUTODRAW</style>
-										<bitmap>./duck/images/media-seek-backward-5.ico</bitmap>
+										<style>wxBU_AUTODRAW|wxNO_BORDER</style>
+										<bitmap>./duck/images/media-skip-backward-5.png</bitmap>
 										<default>0</default>
 									</object>
 								</object>
 								<object class="sizeritem">
 									<option>0</option>
-									<flag>wxALL</flag>
+									<flag></flag>
 									<border>5</border>
 									<object class="wxBitmapButton" name="play_button">
-										<style>wxBU_AUTODRAW</style>
-										<bitmap>./duck/images/media-playback-start-5.ico</bitmap>
+										<style>wxBU_AUTODRAW|wxNO_BORDER</style>
+										<bitmap>./duck/images/media-playback-start-5.png</bitmap>
 										<default>0</default>
 									</object>
 								</object>
 								<object class="sizeritem">
 									<option>0</option>
-									<flag>wxALL</flag>
+									<flag></flag>
 									<border>5</border>
 									<object class="wxBitmapButton" name="pause_button">
-										<style>wxBU_AUTODRAW</style>
-										<bitmap>./duck/images/media-playback-pause-5.ico</bitmap>
+										<style>wxBU_AUTODRAW|wxNO_BORDER</style>
+										<bitmap>./duck/images/media-playback-pause-5.png</bitmap>
 										<default>0</default>
 									</object>
 								</object>
 								<object class="sizeritem">
 									<option>0</option>
-									<flag>wxALL</flag>
+									<flag></flag>
 									<border>5</border>
 									<object class="wxBitmapButton" name="stop_buton">
-										<style>wxBU_AUTODRAW</style>
-										<bitmap>./duck/images/media-playback-stop-5.ico</bitmap>
+										<style>wxBU_AUTODRAW|wxNO_BORDER</style>
+										<bitmap>./duck/images/media-playback-stop-5.png</bitmap>
 										<default>0</default>
 									</object>
 								</object>
 								<object class="sizeritem">
 									<option>0</option>
-									<flag>wxALL</flag>
+									<flag></flag>
 									<border>5</border>
 									<object class="wxBitmapButton" name="next_button">
-										<style>wxBU_AUTODRAW</style>
-										<bitmap>./duck/images/media-seek-forward-5.ico</bitmap>
+										<style>wxBU_AUTODRAW|wxNO_BORDER</style>
+										<bitmap>./duck/images/media-skip-forward-5.png</bitmap>
 										<default>0</default>
 									</object>
 								</object>
 								<object class="sizeritem">
 									<option>1</option>
-									<flag>wxALIGN_RIGHT|wxEXPAND</flag>
+									<flag>wxALIGN_CENTER|wxALIGN_CENTER_VERTICAL|wxALIGN_RIGHT</flag>
 									<border>5</border>
 									<object class="wxBoxSizer">
-										<orient>wxVERTICAL</orient>
+										<orient>wxHORIZONTAL</orient>
+										<object class="spacer">
+											<option>1</option>
+											<flag>wxEXPAND</flag>
+											<border>5</border>
+											<size>0,0</size>
+										</object>
 										<object class="sizeritem">
 											<option>0</option>
-											<flag>wxALIGN_RIGHT|wxALL</flag>
+											<flag>wxALIGN_CENTER_VERTICAL|wxALIGN_RIGHT</flag>
 											<border>5</border>
 											<object class="wxSlider" name="volume_slider">
 												<style>wxSL_HORIZONTAL</style>
@@ -90,13 +96,21 @@
 												<max>100</max>
 											</object>
 										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALIGN_RIGHT|wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticBitmap" name="volume_bitmap">
+												<bitmap>./duck/images/player-volume-2.png</bitmap>
+											</object>
+										</object>
 									</object>
 								</object>
 							</object>
 						</object>
 						<object class="sizeritem">
 							<option>0</option>
-							<flag>wxALL|wxEXPAND</flag>
+							<flag>wxBOTTOM|wxEXPAND</flag>
 							<border>5</border>
 							<object class="wxSlider" name="progress_slider">
 								<value>50</value>

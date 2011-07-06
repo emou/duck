@@ -44,34 +44,40 @@ class MainWindow ( wx.Frame ):
 		
 		playing_buttons_sizer = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.previous_button = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/media-seek-backward-5.ico", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW )
-		playing_buttons_sizer.Add( self.previous_button, 0, wx.ALL, 5 )
+		self.previous_button = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/media-skip-backward-5.png", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER )
+		playing_buttons_sizer.Add( self.previous_button, 0, 0, 5 )
 		
-		self.play_button = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/media-playback-start-5.ico", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW )
-		playing_buttons_sizer.Add( self.play_button, 0, wx.ALL, 5 )
+		self.play_button = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/media-playback-start-5.png", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER )
+		playing_buttons_sizer.Add( self.play_button, 0, 0, 5 )
 		
-		self.pause_button = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/media-playback-pause-5.ico", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW )
-		playing_buttons_sizer.Add( self.pause_button, 0, wx.ALL, 5 )
+		self.pause_button = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/media-playback-pause-5.png", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER )
+		playing_buttons_sizer.Add( self.pause_button, 0, 0, 5 )
 		
-		self.stop_buton = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/media-playback-stop-5.ico", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW )
-		playing_buttons_sizer.Add( self.stop_buton, 0, wx.ALL, 5 )
+		self.stop_buton = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/media-playback-stop-5.png", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER )
+		playing_buttons_sizer.Add( self.stop_buton, 0, 0, 5 )
 		
-		self.next_button = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/media-seek-forward-5.ico", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW )
-		playing_buttons_sizer.Add( self.next_button, 0, wx.ALL, 5 )
+		self.next_button = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/media-skip-forward-5.png", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER )
+		playing_buttons_sizer.Add( self.next_button, 0, 0, 5 )
 		
-		volume_sizer = wx.BoxSizer( wx.VERTICAL )
+		volume_sizer = wx.BoxSizer( wx.HORIZONTAL )
+		
+		
+		volume_sizer.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
 		
 		self.volume_slider = wx.Slider( self.now_playing_page, wx.ID_ANY, 50, 0, 100, wx.DefaultPosition, wx.DefaultSize, wx.SL_HORIZONTAL )
 		self.volume_slider.SetMinSize( wx.Size( 150,-1 ) )
 		
-		volume_sizer.Add( self.volume_slider, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
+		volume_sizer.Add( self.volume_slider, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, 5 )
 		
-		playing_buttons_sizer.Add( volume_sizer, 1, wx.ALIGN_RIGHT|wx.EXPAND, 5 )
+		self.volume_bitmap = wx.StaticBitmap( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/player-volume-2.png", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, 0 )
+		volume_sizer.Add( self.volume_bitmap, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
+		
+		playing_buttons_sizer.Add( volume_sizer, 1, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, 5 )
 		
 		now_playing_sizer.Add( playing_buttons_sizer, 1, wx.EXPAND, 5 )
 		
 		self.progress_slider = wx.Slider( self.now_playing_page, wx.ID_ANY, 50, 0, 100, wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
-		now_playing_sizer.Add( self.progress_slider, 0, wx.ALL|wx.EXPAND, 5 )
+		now_playing_sizer.Add( self.progress_slider, 0, wx.BOTTOM|wx.EXPAND, 5 )
 		
 		self.playlist = wx.ListCtrl( self.now_playing_page, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_REPORT )
 		now_playing_sizer.Add( self.playlist, 0, wx.EXPAND, 5 )

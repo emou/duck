@@ -9,7 +9,7 @@ import time
 
 import duck.backend
 from duck.backend import BaseBackend
-from duck.errors import BackendInitializeError
+from duck.errors import BackendInitializeError, BackendError
 from duck.utils import Calculations
 from duck.backend.mpd.song import Song
 from duck.backend.mpd.playlist import Playlist
@@ -33,6 +33,9 @@ class Backend(BaseBackend):
         self.options = Backend.default_options.copy()
         if options:
             self.options.update(options)
+        self._connect()
+
+    def _connect(self):
         self.client = MPDClient()
         try:
             self.client.connect(self.options['host'],
@@ -42,7 +45,7 @@ class Backend(BaseBackend):
                 'Could not connect to MPD Server at '
                 '%(host)s:%(port)s.' % self.options,
                 'Returned error was: %s.' % e,
-                'Did you forget to install or start the mpd server?',
+                'Is the mpd server running?',
                 'Are your host/port settings correct?',
             ]
             raise BackendInitializeError('\n'.join(msg))
@@ -123,7 +126,6 @@ class Backend(BaseBackend):
 
     def get_status(self):
         self.status = self.client.status()
-        self.memo = {}
         return self.status
 
     @property

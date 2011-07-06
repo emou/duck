@@ -106,7 +106,8 @@ class WindowUpdater(object):
         status_logger.debug('[common_update]')
         song = self.win.backend.current_song
         self.win.SetTitle('%s - %s' % (song.artist, song.title))
-        self.win.progress_timer.Start(1000, oneShot=False)
+        if self.win.backend.status['state'] == 'play':
+            self.win.progress_timer.Start(1000, oneShot=False)
 
 
 class EventHandler(object):
@@ -130,10 +131,9 @@ class EventHandler(object):
             self.win.progress_timer.Stop()
 
     def on_pause(self):
-        self.win.progress_slider.Enable(False)
+        print 'on pause'
         self.stop_timer()
-        self.win.progress_timer.Stop()
-
+        self.win.progress_slider.Enable(False)
 
 class Command(object):
     def __init__(self, skip_updates=None):
@@ -221,6 +221,10 @@ class DuckWindow(MainWindow):
         self.progress_slider.Enable(True)
 
     @Command()
+    def do_pause(self, event):
+        self.backend.pause()
+
+    @Command()
     def do_stop(self, event):
         self.backend.stop()
 
@@ -243,6 +247,7 @@ class DuckWindow(MainWindow):
 
     @Command(skip_updates=set(['volume_slider']))
     def do_volume_set(self, event):
+        print 'vol set'
         logger.debug(event.GetEventType())
         slider = event.GetEventObject()
         self.backend.setvol(slider.GetValue())
