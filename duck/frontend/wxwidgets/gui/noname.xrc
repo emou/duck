@@ -91,11 +91,11 @@
 							</object>
 						</object>
 						<object class="sizeritem">
-							<option>1</option>
+							<option>0</option>
 							<flag>wxEXPAND</flag>
 							<border>5</border>
 							<object class="wxListCtrl" name="playlist">
-								<style>wxLC_ICON|wxLC_REPORT</style>
+								<style>wxLC_REPORT</style>
 							</object>
 						</object>
 					</object>

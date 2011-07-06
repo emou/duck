@@ -12,6 +12,7 @@ from duck.backend import BaseBackend
 from duck.errors import BackendInitializeError
 from duck.utils import Calculations
 from duck.backend.mpd.song import Song
+from duck.backend.mpd.playlist import Playlist
 from duck.log import loggers
 from threading import Event
 
@@ -49,25 +50,28 @@ class Backend(BaseBackend):
         self.idle_request.clear()
 
     def play(self):
-        self.client.play()
+        return self.client.play()
+
+    def playid(self, song_id):
+        return self.client.playid(song_id)
 
     def pause(self):
-        self.client.pause()
+        return self.client.pause()
 
     def stop(self):
-        self.client.stop()
+        return self.client.stop()
 
     def next(self):
-        self.client.next()
+        return self.client.next()
 
     def previous(self):
-        self.client.previous()
+        return self.client.previous()
 
     def seek(self, value):
-        self.client.seek(self.current_song.id, value)
+        return self.client.seekid(self.current_song.id, value)
 
     def setvol(self, value):
-        self.client.setvol(value)
+        return self.client.setvol(value)
 
     # {{ Methods dealing with idle mode and thread synchronization.
 
@@ -116,12 +120,24 @@ class Backend(BaseBackend):
         if song_dict:
             logger.debug(song_dict)
             return Song(song_dict)
-    
+
     def get_status(self):
         self.status = self.client.status()
         self.memo = {}
         return self.status
- 
+
+    @property
+    def volume(self):
+        return int(self.status['volume'])
+
+    @property
+    def playlist(self):
+        return Playlist(self.client.playlistinfo())
+
+    @property
+    def playlistid(self):
+        return self.client.playlistid()
+
     @property
     def elapsed_time(self):
         return int(self.status['time'].split(':')[0])

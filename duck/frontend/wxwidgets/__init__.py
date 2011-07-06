@@ -1,8 +1,9 @@
-from threading import Thread
 try:
     import wx
 except ImportError:
     raise FrontendInitializeError('Could not import wx. Is wxpython installed?')
+
+from threading import Thread
 
 from duck.frontend import BaseFrontend
 from duck.errors import FrontendInitializeError
@@ -57,6 +58,7 @@ class WindowUpdater(object):
 
     updates = set([
         'progress_slider',
+        'volume_slider',
     ])
 
     def __init__(self, win):
@@ -72,19 +74,38 @@ class WindowUpdater(object):
         self.win.progress_slider.SetRange(0, self.win.backend.time)
         self.win.progress_slider.SetValue(self.win.backend.elapsed_time)
 
+    def update_volume_slider(self):
+        self.win.volume_slider.SetValue(self.win.backend.volume)
+
     def update_progress(self, event):
         self.win.progress_slider.SetValue(self.win.progress_slider.GetValue() + 1)
 
-    def update_status(self, skip_updates=None):
+    def update_status(self, skip_updates=None, changes=None):
         status_logger.debug('[update_status]')
         state = self.win.backend.get_status()['state']
         getattr(self.win.handler, 'on_' + state)()
         self.state = state
+        if changes and 'playlist' in changes:
+            self.reload_playlist()
         if state != 'stop':
             self.win.updater.update(skip_updates)
 
+    def reload_playlist(self):
+        pl = self.win.playlist
+        pl.DeleteAllItems()
+        for row, song in enumerate(self.win.backend.playlist.songs):
+            item = wx.ListItem()
+            item.SetData(long(song.id))
+            idx = pl.InsertItem(item)
+            pl.SetStringItem(idx, 0, str(song.pos))
+            pl.SetStringItem(idx, 1, song.artist)
+            pl.SetStringItem(idx, 2, song.title)
+            pl.SetStringItem(idx, 3, str(song.time))
+
     def common_update(self):
         status_logger.debug('[common_update]')
+        song = self.win.backend.current_song
+        self.win.SetTitle('%s - %s' % (song.artist, song.title))
         self.win.progress_timer.Start(1000, oneShot=False)
 
 
@@ -97,7 +118,7 @@ class EventHandler(object):
         self.win = win
 
     def on_play(self):
-        pass
+        self.win.progress_slider.Enable(True)
 
     def on_stop(self):
         self.stop_timer()
@@ -147,6 +168,13 @@ class DuckWindow(MainWindow):
         self.backend = kwargs.pop('backend')
         MainWindow.__init__(self, *args, **kwargs)
 
+        for (i,col) in enumerate((('Pos',       50),
+                                  ('Artist',    200),
+                                  ('Title',     200),
+                                  ('Duration',  100))):
+            self.playlist.InsertColumn(i, col[0], width=col[1])
+        self.playlist.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.do_change_song)
+
         self.skip_idle = False
         self.updater = WindowUpdater(self)
         self.handler = EventHandler(self)
@@ -163,13 +191,14 @@ class DuckWindow(MainWindow):
         self.volume_slider.Bind(wx.EVT_SLIDER, self.do_volume_set)
 
         self.updater.update_status()
+        self.updater.reload_playlist()
         self.backend.idle()
 
     def handle_changes(self, changes, skip_updates=None):
         if changes:
-            logger.debug(changes)
+            logger.debug('changes:\n%s' % changes)
         status_logger.debug('[handle_changes]')
-        self.updater.update_status(skip_updates)
+        self.updater.update_status(skip_updates, changes)
 
     # XXX: This is MPD-specific. Move it to the backend somehow?
     def handle_idle(self, event):
@@ -200,18 +229,24 @@ class DuckWindow(MainWindow):
         logger.debug('do_next')
         self.backend.next()
 
+    @Command()
+    def do_change_song(self, event):
+        i = event.GetItem()
+        song_id = i.GetData()
+        self.backend.playid(song_id)
+
     @Command(skip_updates=set(['progress_slider']))
     def do_seek(self, event):
         logger.debug(event.GetEventType())
         slider = event.GetEventObject()
         self.backend.seek(slider.GetValue())
 
-    @Command()
+    @Command(skip_updates=set(['volume_slider']))
     def do_volume_set(self, event):
         logger.debug(event.GetEventType())
         slider = event.GetEventObject()
         self.backend.setvol(slider.GetValue())
- 
+
 
 # Add command methods
 class Frontend(BaseFrontend):

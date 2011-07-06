@@ -70,8 +70,8 @@ class MainWindow ( wx.Frame ):
 		self.progress_slider = wx.Slider( self.now_playing_page, wx.ID_ANY, 50, 0, 100, wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
 		now_playing_sizer.Add( self.progress_slider, 0, wx.ALL|wx.EXPAND, 5 )
 		
-		self.playlist = wx.ListCtrl( self.now_playing_page, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_ICON|wx.LC_REPORT )
-		now_playing_sizer.Add( self.playlist, 1, wx.EXPAND, 5 )
+		self.playlist = wx.ListCtrl( self.now_playing_page, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_REPORT )
+		now_playing_sizer.Add( self.playlist, 0, wx.EXPAND, 5 )
 		
 		self.now_playing_page.SetSizer( now_playing_sizer )
 		self.now_playing_page.Layout()

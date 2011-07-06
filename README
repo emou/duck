@@ -1,3 +1,8 @@
-duck is going to be a client for the Music Player Daemon (MPD),
-written in pure Python, using the wxPython bindings for the
-wxWidgets GUI toolkit.
+WARNING: this program is in a very early stage of development and is not usable
+at the moment.
+
+== Duck
+This is my attempt at a modular music player interface.
+Currently it is an MPD client written in wxWidgets, but
+the idea is that in the future you could add a backend
+module to let it run on different backends.
