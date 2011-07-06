@@ -11,6 +11,8 @@ from gui.noname import MainWindow
 
 logger = loggers.main
 idle_logger = loggers.idle
+status_logger = loggers.status
+
 
 class IdleEvent(wx.PyEvent):
     """
@@ -22,6 +24,7 @@ class IdleEvent(wx.PyEvent):
     def __init__(self):
         wx.PyEvent.__init__(self)
         self.SetEventType(self.IDLE_EVENT_ID)
+
 
 class IdleThread(Thread):
     """
@@ -46,28 +49,96 @@ class IdleThread(Thread):
     def stop(self):
         self.should_run = False
 
-import traceback
-def command(func):
-    def decorated(self, *args, **kwargs):
-        # Indicate that the idle handler should skip the event from the idle
-        # thread on the next pass, because we would have taken care of the idle
-        # changes here.
-        self.skip_idle = True
-        self.handle_changes(self.backend.noidle())
-        logger.debug('after handle_changes')
-        ret = func(self, *args, **kwargs)
-        logger.debug('calling func ', func.__name__)
-        logger.debug('Ha!')
-        logger.debug(''.join(traceback.format_stack()))
-        logger.debug('=================')
-        logger.debug('=================')
-        # XXX: Should optimize this.
-        self.update_status()
-        logger.debug('after update status.. going idle.')
-        self.backend.idle()
-        logger.debug('went idle')
-        return ret
-    return decorated
+
+class WindowUpdater(object):
+    '''
+    An object that updates the window based on changes.
+    '''
+
+    updates = set([
+        'progress_slider',
+    ])
+
+    def __init__(self, win):
+        self.win = win
+        self.state = None
+
+    def update(self, skip_updates=None):
+        self.common_update()
+        for u in self.updates - set(skip_updates or []):
+            getattr(self, 'update_' + u)()
+
+    def update_progress_slider(self):
+        self.win.progress_slider.SetRange(0, self.win.backend.time)
+        self.win.progress_slider.SetValue(self.win.backend.elapsed_time)
+
+    def update_progress(self, event):
+        self.win.progress_slider.SetValue(self.win.progress_slider.GetValue() + 1)
+
+    def update_status(self, skip_updates=None):
+        status_logger.debug('[update_status]')
+        state = self.win.backend.get_status()['state']
+        getattr(self.win.handler, 'on_' + state)()
+        self.state = state
+        if state != 'stop':
+            self.win.updater.update(skip_updates)
+
+    def common_update(self):
+        status_logger.debug('[common_update]')
+        self.win.progress_timer.Start(1000, oneShot=False)
+
+
+class EventHandler(object):
+    '''
+    An object that handles window events.
+    '''
+
+    def __init__(self, win):
+        self.win = win
+
+    def on_play(self):
+        pass
+
+    def on_stop(self):
+        self.stop_timer()
+        self.win.progress_slider.SetValue(0)
+        self.win.progress_slider.Enable(False)
+
+    def stop_timer(self):
+        if self.win.progress_timer.IsRunning():
+            self.win.progress_timer.Stop()
+
+    def on_pause(self):
+        self.win.progress_slider.Enable(False)
+        self.stop_timer()
+        self.win.progress_timer.Stop()
+
+
+class Command(object):
+    def __init__(self, skip_updates=None):
+        self.skip_updates = skip_updates
+
+    def __call__(self, func):
+        def decorated(win, *args, **kwargs):
+            status_logger.debug('[%s command begin]' % func.__name__)
+
+            # Indicate that the idle handler should skip the event from the idle
+            # thread on the next pass, because we would have taken care of the idle
+            # changes here.
+            win.skip_idle = True
+            win.handle_changes(win.backend.noidle(), self.skip_updates)
+            logger.debug('after handle_changes')
+
+            # call the actual method
+            ret = func(win, *args, **kwargs)
+
+            win.backend.idle()
+            idle_logger.debug('went idle')
+
+            status_logger.debug('[%s command end]' % func.__name__)
+            return ret
+        return decorated
+
 
 class DuckWindow(MainWindow):
 
@@ -77,33 +148,31 @@ class DuckWindow(MainWindow):
         MainWindow.__init__(self, *args, **kwargs)
 
         self.skip_idle = False
-        self.state = None
+        self.updater = WindowUpdater(self)
+        self.handler = EventHandler(self)
 
         self.idle_thread = IdleThread(self.backend, self)
-        self.Connect(-1, -1, IdleEvent.IDLE_EVENT_ID, self.do_changes)
+        self.Connect(-1, -1, IdleEvent.IDLE_EVENT_ID, self.handle_idle)
         self.idle_thread.start()
 
         self.progress_slider.SetValue(0)
         self.progress_slider.Bind(wx.EVT_SLIDER, self.do_seek)
-        self.update_slider = True
         self.progress_timer = wx.Timer(self, wx.ID_ANY)
-        self.Bind(wx.EVT_TIMER, self.update_progress)
+        self.Bind(wx.EVT_TIMER, self.updater.update_progress)
 
         self.volume_slider.Bind(wx.EVT_SLIDER, self.do_volume_set)
 
-        self.update_status()
+        self.updater.update_status()
         self.backend.idle()
 
-    def update_progress(self, event):
-        self.progress_slider.SetValue(self.progress_slider.GetValue() + 1)
-
-    def handle_changes(self, changes):
+    def handle_changes(self, changes, skip_updates=None):
         if changes:
             logger.debug(changes)
-        self.update_status()
+        status_logger.debug('[handle_changes]')
+        self.updater.update_status(skip_updates)
 
     # XXX: This is MPD-specific. Move it to the backend somehow?
-    def do_changes(self, event):
+    def handle_idle(self, event):
         """
         Event handler for idle events (changes to MPD state).
         """
@@ -113,72 +182,38 @@ class DuckWindow(MainWindow):
             self.backend.idle()
         self.skip_idle = False
 
-    @command
+    @Command()
     def do_previous(self, event):
         self.backend.previous()
 
-    @command
+    @Command()
     def do_play(self, event):
         self.backend.play()
         self.progress_slider.Enable(True)
 
-    @command
+    @Command()
     def do_stop(self, event):
         self.backend.stop()
 
-    @command
+    @Command()
     def do_next(self, event):
         logger.debug('do_next')
         self.backend.next()
 
-    @command
+    @Command(skip_updates=set(['progress_slider']))
     def do_seek(self, event):
         logger.debug(event.GetEventType())
         slider = event.GetEventObject()
         self.backend.seek(slider.GetValue())
-        self.update_slider = False
 
-    @command
+    @Command()
     def do_volume_set(self, event):
         logger.debug(event.GetEventType())
-        #slider = event.GetEventObject()
-        #self.backend.setvol(slider.GetValue())
+        slider = event.GetEventObject()
+        self.backend.setvol(slider.GetValue())
  
-    def update_status(self):
-        logger.debug('Updating status...')
-        state = self.backend.get_status()['state']
-        getattr(self, 'on_' + state)()
-        self.state = state
-        if state != 'stop':
-            self.common_update()
 
-    def common_update(self):
-        logger.debug('elapsed time: %s' % self.backend.elapsed_time)
-        if self.update_slider:
-            self.progress_slider.SetRange(0, self.backend.time)
-        else:
-            self.update_slider = False
-        self.progress_slider.SetValue(self.backend.elapsed_time)
-        self.progress_timer.Start(1000, oneShot=False)
-
-    def on_play(self):
-        pass
-
-    def on_stop(self):
-        self.stop_timer()
-        self.progress_slider.SetValue(0)
-        self.progress_slider.Enable(False)
-
-    def stop_timer(self):
-        if self.progress_timer.IsRunning():
-            self.progress_timer.Stop()
-
-    def on_pause(self):
-        self.progress_slider.Enable(False)
-        self.stop_timer()
-        self.progress_timer.Stop()
-
-
+# Add command methods
 class Frontend(BaseFrontend):
     """
     A frontend, implemented using wxwidgets.
@@ -193,3 +228,5 @@ class Frontend(BaseFrontend):
         self.main_window.Show()
         self.application.SetTopWindow(self.main_window)
         return self.application.MainLoop()
+
+
