@@ -44,17 +44,20 @@ class MainWindow ( wx.Frame ):
 		
 		playing_buttons_sizer = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.previous_button = wx.Button( self.now_playing_page, wx.ID_ANY, u"PREV", wx.DefaultPosition, wx.DefaultSize, 0 )
-		playing_buttons_sizer.Add( self.previous_button, 0, wx.ALIGN_CENTER, 5 )
+		self.previous_button = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/media-seek-backward-5.ico", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW )
+		playing_buttons_sizer.Add( self.previous_button, 0, wx.ALL, 5 )
 		
-		self.play_button = wx.Button( self.now_playing_page, wx.ID_ANY, u"PLAY", wx.DefaultPosition, wx.DefaultSize, 0 )
-		playing_buttons_sizer.Add( self.play_button, 0, wx.ALIGN_CENTER, 5 )
+		self.play_button = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/media-playback-start-5.ico", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW )
+		playing_buttons_sizer.Add( self.play_button, 0, wx.ALL, 5 )
 		
-		self.stop_button = wx.Button( self.now_playing_page, wx.ID_ANY, u"STOP", wx.DefaultPosition, wx.DefaultSize, 0 )
-		playing_buttons_sizer.Add( self.stop_button, 0, wx.ALIGN_CENTER, 5 )
+		self.pause_button = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/media-playback-pause-5.ico", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW )
+		playing_buttons_sizer.Add( self.pause_button, 0, wx.ALL, 5 )
 		
-		self.next_button = wx.Button( self.now_playing_page, wx.ID_ANY, u"NEXT", wx.DefaultPosition, wx.DefaultSize, 0 )
-		playing_buttons_sizer.Add( self.next_button, 0, wx.ALIGN_CENTER, 5 )
+		self.stop_buton = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/media-playback-stop-5.ico", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW )
+		playing_buttons_sizer.Add( self.stop_buton, 0, wx.ALL, 5 )
+		
+		self.next_button = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/media-seek-forward-5.ico", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW )
+		playing_buttons_sizer.Add( self.next_button, 0, wx.ALL, 5 )
 		
 		volume_sizer = wx.BoxSizer( wx.VERTICAL )
 		
@@ -109,7 +112,8 @@ class MainWindow ( wx.Frame ):
 		# Connect Events
 		self.previous_button.Bind( wx.EVT_BUTTON, self.do_previous )
 		self.play_button.Bind( wx.EVT_BUTTON, self.do_play )
-		self.stop_button.Bind( wx.EVT_BUTTON, self.do_stop )
+		self.pause_button.Bind( wx.EVT_BUTTON, self.do_pause )
+		self.stop_buton.Bind( wx.EVT_BUTTON, self.do_stop )
 		self.next_button.Bind( wx.EVT_BUTTON, self.do_next )
 	
 	def __del__( self ):
@@ -121,6 +125,9 @@ class MainWindow ( wx.Frame ):
 		event.Skip()
 	
 	def do_play( self, event ):
+		event.Skip()
+	
+	def do_pause( self, event ):
 		event.Skip()
 	
 	def do_stop( self, event ):
