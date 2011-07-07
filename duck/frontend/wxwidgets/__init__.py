@@ -96,6 +96,7 @@ class WindowUpdater(object):
         for row, song in enumerate(self.win.backend.playlist.songs):
             item = wx.ListItem()
             item.SetData(long(song.id))
+            item.SetId(row + 1)
             idx = pl.InsertItem(item)
             pl.SetStringItem(idx, 0, str(song.pos))
             pl.SetStringItem(idx, 1, song.artist)
@@ -168,6 +169,10 @@ class DuckWindow(MainWindow):
         self.backend = kwargs.pop('backend')
         MainWindow.__init__(self, *args, **kwargs)
 
+        # The wx.App object must be created first!
+        self.NORMAL_FONT = wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, 1)
+        self.BOLD_FONT   = wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, 1, underline=True)
+
         for (i,col) in enumerate((('Pos',       50),
                                   ('Artist',    200),
                                   ('Title',     200),
@@ -175,6 +180,7 @@ class DuckWindow(MainWindow):
             self.playlist.InsertColumn(i, col[0], width=col[1])
         self.playlist.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.do_change_song)
 
+        self.current_song = None
         self.skip_idle = False
         self.updater = WindowUpdater(self)
         self.handler = EventHandler(self)
@@ -235,8 +241,13 @@ class DuckWindow(MainWindow):
 
     @Command()
     def do_change_song(self, event):
-        i = event.GetItem()
-        song_id = i.GetData()
+        item = event.GetItem()
+        song_id = item.GetData()
+        if self.current_song is not None:
+            self.playlist.SetItemFont(self.current_song, self.NORMAL_FONT)
+        self.current_song = song_id
+        self.playlist.SetItemFont(song_id, self.BOLD_FONT)
+
         self.backend.playid(song_id)
 
     @Command(skip_updates=set(['progress_slider']))

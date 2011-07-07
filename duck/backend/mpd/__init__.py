@@ -52,8 +52,11 @@ class Backend(BaseBackend):
         self.idle_request = Event()
         self.idle_request.clear()
 
-    def play(self):
-        return self.client.play()
+    def play(self, song_id=None):
+        if song_id:
+            return self.client.play(song_id)
+        else:
+            return self.client.play()
 
     def playid(self, song_id):
         return self.client.playid(song_id)

@@ -27,6 +27,8 @@ class Duration(datetime.timedelta):
 
     def __str__(self):
         try:
+            # timedelta objects are immutable, so we might as well memoize the
+            # result
             return self.fmt
         except AttributeError:
             seconds = self.total_seconds()
