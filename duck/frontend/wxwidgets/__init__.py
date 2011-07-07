@@ -64,6 +64,11 @@ class WindowUpdater(object):
     def __init__(self, win):
         self.win = win
         self.state = None
+        self.current_song = None
+
+        # The wx.App object must be created first!
+        WindowUpdater.NORMAL_FONT = wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.NORMAL)
+        WindowUpdater.BOLD_FONT   = wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.BOLD)
 
     def update(self, skip_updates=None):
         self.common_update()
@@ -88,25 +93,40 @@ class WindowUpdater(object):
         if changes and 'playlist' in changes:
             self.reload_playlist()
         if state != 'stop':
-            self.win.updater.update(skip_updates)
+            self.update(skip_updates)
 
     def reload_playlist(self):
         pl = self.win.playlist
+
         pl.DeleteAllItems()
+
+        current_song = self.win.backend.current_song
+
         for row, song in enumerate(self.win.backend.playlist.songs):
             item = wx.ListItem()
             item.SetData(long(song.id))
             item.SetId(row + 1)
+
+            # Couldn't find another way to initially set font to bold.
+            # It just doesn't work
             idx = pl.InsertItem(item)
             pl.SetStringItem(idx, 0, str(song.pos))
             pl.SetStringItem(idx, 1, song.artist)
             pl.SetStringItem(idx, 2, song.title)
             pl.SetStringItem(idx, 3, str(song.time))
+        self.win.playlist = pl
 
     def common_update(self):
         status_logger.debug('[common_update]')
         song = self.win.backend.current_song
         self.win.SetTitle('%s - %s' % (song.artist, song.title))
+
+        if self.current_song != long(song.pos):
+            if self.current_song is not None:
+                self.win.playlist.SetItemFont(self.current_song, self.NORMAL_FONT)
+            self.current_song = long(song.pos)
+            self.win.playlist.SetItemFont(self.current_song, self.BOLD_FONT)
+
         if self.win.backend.status['state'] == 'play':
             self.win.progress_timer.Start(1000, oneShot=False)
 
@@ -169,10 +189,6 @@ class DuckWindow(MainWindow):
         self.backend = kwargs.pop('backend')
         MainWindow.__init__(self, *args, **kwargs)
 
-        # The wx.App object must be created first!
-        self.NORMAL_FONT = wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, 1)
-        self.BOLD_FONT   = wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, 1, underline=True)
-
         for (i,col) in enumerate((('Pos',       50),
                                   ('Artist',    200),
                                   ('Title',     200),
@@ -180,7 +196,6 @@ class DuckWindow(MainWindow):
             self.playlist.InsertColumn(i, col[0], width=col[1])
         self.playlist.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.do_change_song)
 
-        self.current_song = None
         self.skip_idle = False
         self.updater = WindowUpdater(self)
         self.handler = EventHandler(self)
@@ -196,8 +211,8 @@ class DuckWindow(MainWindow):
 
         self.volume_slider.Bind(wx.EVT_SLIDER, self.do_volume_set)
 
-        self.updater.update_status()
         self.updater.reload_playlist()
+        self.updater.update_status()
         self.backend.idle()
 
     def handle_changes(self, changes, skip_updates=None):
@@ -241,14 +256,7 @@ class DuckWindow(MainWindow):
 
     @Command()
     def do_change_song(self, event):
-        item = event.GetItem()
-        song_id = item.GetData()
-        if self.current_song is not None:
-            self.playlist.SetItemFont(self.current_song, self.NORMAL_FONT)
-        self.current_song = song_id
-        self.playlist.SetItemFont(song_id, self.BOLD_FONT)
-
-        self.backend.playid(song_id)
+        self.backend.playid(event.GetItem().GetData())
 
     @Command(skip_updates=set(['progress_slider']))
     def do_seek(self, event):
