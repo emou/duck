@@ -14,40 +14,16 @@ logger = loggers.main
 idle_logger = loggers.idle
 status_logger = loggers.status
 
-class IdleEvent(wx.PyEvent):
+class ChangesEvent(wx.PyEvent):
     """
     An event representing an MPD status change.
     """
 
-    IDLE_EVENT_ID = wx.NewId()
+    REFRESH_EVT_ID = wx.NewId()
 
     def __init__(self):
         wx.PyEvent.__init__(self)
-        self.SetEventType(self.IDLE_EVENT_ID)
-
-
-class IdleThread(Thread):
-    """
-    The thread that checks for MPD status change.
-    """
-
-    def __init__(self, backend, window):
-        Thread.__init__(self)
-        self.setDaemon(True)
-        self.backend = backend
-        self.window = window
-        self.should_run = True
-
-    def run(self):
-        while(self.should_run):
-            idle_logger.debug('waiting for idle')
-            self.backend.idle_wait()
-            idle_logger.debug('woke up!')
-            wx.PostEvent(self.window, IdleEvent())
-            self.backend.idle_wokeup()
-
-    def stop(self):
-        self.should_run = False
+        self.SetEventType(self.REFRESH_EVT_ID)
 
 
 class WindowUpdater(object):
@@ -170,10 +146,9 @@ class Command(object):
         def decorated(win, *args, **kwargs):
             status_logger.debug('[%s command begin]' % func.__name__)
 
-            # Indicate that the idle handler should skip the event from the idle
-            # thread on the next pass, because we would have taken care of the idle
-            # changes here.
-            win.skip_idle = True
+            wx.PostEvent(win, ChangesEvent())
+
+            # Notify backend it's out of idle mode
             win.handle_changes(win.backend.noidle(), self.skip_updates)
             logger.debug('after handle_changes')
 
@@ -202,13 +177,11 @@ class DuckWindow(MainWindow):
             self.playlist.InsertColumn(i, col[0], width=col[1])
         self.playlist.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.do_change_song)
 
-        self.skip_idle = False
+        self.skip_refresh = False
         self.updater = WindowUpdater(self)
         self.handler = EventHandler(self)
 
-        self.idle_thread = IdleThread(self.backend, self)
-        self.Connect(-1, -1, IdleEvent.IDLE_EVENT_ID, self.handle_idle)
-        self.idle_thread.start()
+        self.Connect(-1, -1, ChangesEvent.REFRESH_EVT_ID, self.refresh)
 
         self.progress_slider.SetValue(0)
         self.progress_slider.Bind(wx.EVT_SLIDER, self.do_seek)
@@ -227,16 +200,11 @@ class DuckWindow(MainWindow):
         status_logger.debug('[handle_changes]')
         self.updater.update_status(skip_updates, changes)
 
-    # XXX: This is MPD-specific. Move it to the backend somehow?
-    def handle_idle(self, event):
-        """
-        Event handler for idle events (changes to MPD state).
-        """
-        logger.debug('got an event...')
-        if not self.skip_idle:
+    def refresh(self, event):
+        if not self.skip_refresh:
             self.handle_changes(self.backend.noidle())
             self.backend.idle()
-        self.skip_idle = False
+        self.skip_refresh = False
 
     @Command()
     def do_previous(self, event):
@@ -301,5 +269,8 @@ class Frontend(BaseFrontend):
         self.main_window.Show()
         self.application.SetTopWindow(self.main_window)
         return self.application.MainLoop()
+
+    def async_refresh(self):
+        wx.PostEvent(self.main_window, ChangesEvent())
 
 

@@ -13,6 +13,12 @@ class BaseBackend(object):
     The base Backend object.
     """
 
+    def __init__(self, frontend):
+        self.frontend = frontend
+    
+    def fetch_changes(self):
+        raise NotImplementedError()
+
     def play(self):
         raise NotImplementedError()
 

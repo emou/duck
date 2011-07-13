@@ -12,7 +12,7 @@ class BaseFrontend(object):
         A new frontend, which will be associated with a backend of the given class.
         """
         try:
-            self.backend = BackendClass()
+            self.backend = BackendClass(self)
         except BackendError as e:
             self.handle_error(e)
 
@@ -30,4 +30,10 @@ class BaseFrontend(object):
             errcode = 1
         sys.exit(errcode)
 
+    def async_refresh(self):
+        """
+        Called by the backend to notify the frontend of changes in state.
+        Might be called from another thread.
+        """
+        raise NotImplementedError()
 

@@ -11,8 +11,9 @@ import duck.backend
 from duck.backend import BaseBackend
 from duck.errors import BackendInitializeError, BackendError
 from duck.utils import Calculations
-from duck.backend.mpd.song import Song
+from duck.backend.mpd.idle import IdleThread
 from duck.backend.mpd.playlist import Playlist
+from duck.backend.mpd.song import Song
 from duck.log import loggers
 from threading import Event
 
@@ -29,7 +30,9 @@ class Backend(BaseBackend):
         'port': 6600,
     }
 
-    def __init__(self, options=None):
+    def __init__(self, *args, **kwargs):
+        options = kwargs.pop('options', None)
+        BaseBackend.__init__(self, *args, **kwargs)
         self.options = Backend.default_options.copy()
         if options:
             self.options.update(options)
@@ -38,8 +41,7 @@ class Backend(BaseBackend):
     def _connect(self):
         self.client = MPDClient()
         try:
-            self.client.connect(self.options['host'],
-                                self.options['port'])
+            self.client.connect(self.options['host'], self.options['port'])
         except (MPDError, socket.error) as e:
             msg = [
                 'Could not connect to MPD Server at '
@@ -51,6 +53,8 @@ class Backend(BaseBackend):
             raise BackendInitializeError('\n'.join(msg))
         self.idle_request = Event()
         self.idle_request.clear()
+        self.idle_thread = IdleThread(self)
+        self.idle_thread.start()
 
     def play(self, song_id=None):
         if song_id:
@@ -93,7 +97,7 @@ class Backend(BaseBackend):
         idle_logger.debug('setting idle_request to true...\n')
         self.idle_request.set()
 
-    def idle_wait(self):
+    def _idle_wait(self):
         """
         Notification thread blocks on socket.
         """
@@ -103,7 +107,7 @@ class Backend(BaseBackend):
         idle_logger.debug('Polling for changes...')
         select.select([self.client], [], [])
 
-    def idle_wokeup(self):
+    def _idle_wokeup(self):
         """
         Notification thread woke up.
         """

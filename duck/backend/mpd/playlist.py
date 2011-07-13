@@ -1,5 +1,6 @@
 from duck.backend.mpd.song import Song
 
+
 class Playlist(object):
     """
     An object hodling the current playlist.
@@ -9,3 +10,5 @@ class Playlist(object):
 
     def __iter__(self):
         return self
+
+

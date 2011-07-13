@@ -1,5 +1,6 @@
 from duck.utils import Duration
 
+
 class Song(object):
     """
     A class representing a song in the MPD database.
@@ -26,3 +27,5 @@ class Song(object):
         typ._cache[self.id] = self
 
         return self
+
+
