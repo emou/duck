@@ -14,7 +14,6 @@ logger = loggers.main
 idle_logger = loggers.idle
 status_logger = loggers.status
 
-
 class IdleEvent(wx.PyEvent):
     """
     An event representing an MPD status change.
@@ -67,8 +66,10 @@ class WindowUpdater(object):
         self.current_song = None
 
         # The wx.App object must be created first!
-        WindowUpdater.NORMAL_FONT = wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.NORMAL)
-        WindowUpdater.BOLD_FONT   = wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.BOLD)
+        self.NORMAL_FONT = wx.Font(10, wx.FONTFAMILY_DEFAULT,
+                                   wx.FONTSTYLE_NORMAL, wx.NORMAL)
+        self.BOLD_FONT   = wx.Font(10, wx.FONTFAMILY_DEFAULT,
+                                   wx.FONTSTYLE_NORMAL, wx.BOLD)
 
     def update(self, skip_updates=None):
         self.common_update()
@@ -107,16 +108,18 @@ class WindowUpdater(object):
             item.SetData(long(song.id))
             item.SetId(row + 1)
 
-            # Couldn't find another way to initially set font to bold.
-            # It just doesn't work
             idx = pl.InsertItem(item)
             pl.SetStringItem(idx, 0, str(song.pos))
             pl.SetStringItem(idx, 1, song.artist)
             pl.SetStringItem(idx, 2, song.title)
             pl.SetStringItem(idx, 3, str(song.time))
+
         self.win.playlist = pl
 
     def common_update(self):
+        """
+        Called everytime something changes.
+        """
         status_logger.debug('[common_update]')
         song = self.win.backend.current_song
         self.win.SetTitle('%s - %s' % (song.artist, song.title))
@@ -132,9 +135,9 @@ class WindowUpdater(object):
 
 
 class EventHandler(object):
-    '''
+    """
     An object that handles window events.
-    '''
+    """
 
     def __init__(self, win):
         self.win = win
@@ -152,11 +155,14 @@ class EventHandler(object):
             self.win.progress_timer.Stop()
 
     def on_pause(self):
-        print 'on pause'
         self.stop_timer()
         self.win.progress_slider.Enable(False)
 
+
 class Command(object):
+    """
+    A decorator that automatically gets the new state and refreshes the Window.
+    """
     def __init__(self, skip_updates=None):
         self.skip_updates = skip_updates
 
@@ -238,8 +244,12 @@ class DuckWindow(MainWindow):
 
     @Command()
     def do_play(self, event):
-        self.backend.play()
-        self.progress_slider.Enable(True)
+        if self.backend.playlist.songs:
+            self.backend.play()
+            self.progress_slider.Enable(True)
+        else:
+            # TODO: Show a dialog with message
+            print 'Playlist is empty'
 
     @Command()
     def do_pause(self, event):
@@ -266,10 +276,14 @@ class DuckWindow(MainWindow):
 
     @Command(skip_updates=set(['volume_slider']))
     def do_volume_set(self, event):
-        print 'vol set'
+        logger.debug('volume set')
         logger.debug(event.GetEventType())
-        slider = event.GetEventObject()
-        self.backend.setvol(slider.GetValue())
+        val = event.GetEventObject().GetValue()
+        self.backend.setvol(val)
+
+    @Command()
+    def do_clear(self, event):
+        self.backend.clear()
 
 
 # Add command methods

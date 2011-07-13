@@ -20,9 +20,9 @@ class MainWindow ( wx.Frame ):
 		
 		self.SetSizeHintsSz( wx.Size( -1,-1 ), wx.DefaultSize )
 		
-		main_sizer = wx.FlexGridSizer( 2, 2, 0, 0 )
-		main_sizer.AddGrowableCol( 0 )
-		main_sizer.AddGrowableRow( 0 )
+		main_sizer = wx.FlexGridSizer( 1, 1, 0, 0 )
+		main_sizer.AddGrowableCol( 1 )
+		main_sizer.AddGrowableRow( 1 )
 		main_sizer.SetFlexibleDirection( wx.BOTH )
 		main_sizer.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_ALL )
 		
@@ -36,8 +36,6 @@ class MainWindow ( wx.Frame ):
 		self.now_playing_page = wx.Panel( self.notebook, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		now_playing_sizer = wx.FlexGridSizer( 3, 1, 0, 0 )
 		now_playing_sizer.AddGrowableCol( 0 )
-		now_playing_sizer.AddGrowableCol( 1 )
-		now_playing_sizer.AddGrowableCol( 2 )
 		now_playing_sizer.AddGrowableRow( 2 )
 		now_playing_sizer.SetFlexibleDirection( wx.BOTH )
 		now_playing_sizer.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_ALL )
@@ -72,6 +70,9 @@ class MainWindow ( wx.Frame ):
 		self.volume_bitmap = wx.StaticBitmap( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/player-volume-2.png", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, 0 )
 		volume_sizer.Add( self.volume_bitmap, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
 		
+		self.clear_button = wx.BitmapButton( self.now_playing_page, wx.ID_ANY, wx.Bitmap( u"duck/images/playlist-clear.png", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER )
+		volume_sizer.Add( self.clear_button, 0, 0, 5 )
+		
 		playing_buttons_sizer.Add( volume_sizer, 1, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, 5 )
 		
 		now_playing_sizer.Add( playing_buttons_sizer, 1, wx.EXPAND, 5 )
@@ -87,6 +88,20 @@ class MainWindow ( wx.Frame ):
 		now_playing_sizer.Fit( self.now_playing_page )
 		self.notebook.AddPage( self.now_playing_page, u"Now playing", True )
 		self.page_library = wx.Panel( self.notebook, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		library_sizer = wx.BoxSizer( wx.HORIZONTAL )
+		
+		self.artist_list = wx.ListCtrl( self.page_library, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_AUTOARRANGE|wx.LC_ICON|wx.LC_NO_HEADER )
+		library_sizer.Add( self.artist_list, 1, wx.EXPAND, 5 )
+		
+		self.album_list = wx.ListCtrl( self.page_library, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_ICON )
+		library_sizer.Add( self.album_list, 1, wx.EXPAND, 5 )
+		
+		self.song_list = wx.ListCtrl( self.page_library, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_ICON )
+		library_sizer.Add( self.song_list, 1, wx.EXPAND, 5 )
+		
+		self.page_library.SetSizer( library_sizer )
+		self.page_library.Layout()
+		library_sizer.Fit( self.page_library )
 		self.notebook.AddPage( self.page_library, u"Library", False )
 		self.page_devices = wx.Panel( self.notebook, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.notebook.AddPage( self.page_devices, u"External devices", False )
@@ -98,16 +113,16 @@ class MainWindow ( wx.Frame ):
 		main_sizer.Fit( self )
 		self.main_menu = wx.MenuBar( 0 )
 		self.menu_music = wx.Menu()
-		self.item_rescan = wx.MenuItem( self.menu_music, wx.ID_ANY, u"Rescan database", wx.EmptyString, wx.ITEM_NORMAL )
+		self.item_rescan = wx.MenuItem( self.menu_music, wx.ID_ANY, u"&Rescan database", wx.EmptyString, wx.ITEM_NORMAL )
 		self.menu_music.AppendItem( self.item_rescan )
 		
-		self.main_menu.Append( self.menu_music, u"Music" ) 
+		self.main_menu.Append( self.menu_music, u"&Music" ) 
 		
 		self.menu_settings = wx.Menu()
-		self.item_configure = wx.MenuItem( self.menu_settings, wx.ID_ANY, u"Configure Duck...", wx.EmptyString, wx.ITEM_NORMAL )
+		self.item_configure = wx.MenuItem( self.menu_settings, wx.ID_ANY, u"&Configure Duck...", wx.EmptyString, wx.ITEM_NORMAL )
 		self.menu_settings.AppendItem( self.item_configure )
 		
-		self.main_menu.Append( self.menu_settings, u"Settings" ) 
+		self.main_menu.Append( self.menu_settings, u"&Settings" ) 
 		
 		self.SetMenuBar( self.main_menu )
 		
@@ -121,6 +136,7 @@ class MainWindow ( wx.Frame ):
 		self.pause_button.Bind( wx.EVT_BUTTON, self.do_pause )
 		self.stop_buton.Bind( wx.EVT_BUTTON, self.do_stop )
 		self.next_button.Bind( wx.EVT_BUTTON, self.do_next )
+		self.clear_button.Bind( wx.EVT_BUTTON, self.do_clear )
 	
 	def __del__( self ):
 		pass
@@ -140,6 +156,9 @@ class MainWindow ( wx.Frame ):
 		event.Skip()
 	
 	def do_next( self, event ):
+		event.Skip()
+	
+	def do_clear( self, event ):
 		event.Skip()
 	
 

@@ -78,6 +78,9 @@ class Backend(BaseBackend):
 
     def setvol(self, value):
         return self.client.setvol(value)
+    
+    def clear(self):
+        return self.client.clear()
 
     # {{ Methods dealing with idle mode and thread synchronization.
 
