@@ -31,9 +31,9 @@ class ChangesEvent(wx.PyEvent):
 def command(func):
     def cmd_func(window, *args, **kwargs):
         logger.debug('[begin] command %s' % func.__name__)
-        window.backend.start_command()
-        ret = func(window, *args, **kwargs)
-        window.backend.end_command()
+        with window.backend as b:
+            b.frontend.async_refresh(b.last_changes())
+            ret = func(window, *args, **kwargs)
         logger.debug('[end] command %s' % func.__name__)
         return ret
     return cmd_func
@@ -97,7 +97,7 @@ class WindowUpdater(object):
             item.SetId(row + 1)
 
             idx = pl.InsertItem(item)
-            pl.SetStringItem(idx, 0, str(song.pos))
+            pl.SetStringItem(idx, 0, str(song.pos + 1))
             pl.SetStringItem(idx, 1, song.artist)
             pl.SetStringItem(idx, 2, song.title)
             pl.SetStringItem(idx, 3, str(song.time))
@@ -110,13 +110,16 @@ class WindowUpdater(object):
         """
         status_logger.debug('[common_update]')
         song = self.win.backend.current_song
-        self.win.SetTitle('%s - %s' % (song.artist, song.title))
 
         if self.current_song != long(song.pos):
             if self.current_song is not None:
                 self.win.playlist.SetItemFont(self.current_song, self.NORMAL_FONT)
+            self.win.SetTitle('%s - %s' % (song.artist, song.title))
+            self.win.status_bar.SetStatusText('%s - %s' % (song.artist, song.title))
             self.current_song = long(song.pos)
             self.win.playlist.SetItemFont(self.current_song, self.BOLD_FONT)
+            self.win.playlist.SetItemState(self.current_song, wx.LIST_STATE_FOCUSED, wx.LIST_STATE_FOCUSED)
+            self.win.playlist.EnsureVisible(self.current_song)
 
         if self.win.backend.status['state'] == 'play':
             self.win.progress_timer.Start(1000, oneShot=False)
@@ -185,8 +188,8 @@ class DuckWindow(MainWindow):
         self.updater.update_status(skip_updates, changes)
 
     def refresh(self, event):
-        changes = event.get_changes()
-        if changes:
+        with self.backend as b:
+            changes = event.get_changes()
             self.handle_changes(changes)
 
     @command

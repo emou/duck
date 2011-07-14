@@ -59,9 +59,15 @@ class Backend(BaseBackend):
             ]
             raise BackendInitializeError('\n'.join(msg))
 
-    def start_command(self):
-        changes = self._noidle()
-        self.frontend.async_refresh(changes)
+    def __enter__(self):
+        self._changes = self._noidle()
+        return self
+
+    def __exit__(self, *args):
+        self.idle()
+
+    def last_changes(self):
+        return self._changes
 
     def end_command(self):
         self.idle()
@@ -92,7 +98,7 @@ class Backend(BaseBackend):
 
     def setvol(self, value):
         return self.client.setvol(value)
-    
+
     def clear(self):
         return self.client.clear()
 
@@ -101,21 +107,22 @@ class Backend(BaseBackend):
     def idle(self):
         """
         Main thread marks it's idle.
+        Happens-before: noidle.
         """
-        self._is_idle = True
+        self._isidle=True
         self.client.send_idle()
         idle_logger.debug('[idle]')
         self.idle_request.set()
 
-    def _idle_wait(self):
+    def _wait_for_idle(self):
         """
         Notification thread blocks on socket.
         """
         idle_logger.debug('[idle-wait] Waiting for idle_request...')
         self.idle_request.wait()
-        self.idle_request.clear()
         idle_logger.debug('[idle-poll] Polling for changes...')
         select.select([self.client], [], [])
+        self.idle_request.clear()
 
     def _idle_wokeup(self):
         """
@@ -129,13 +136,8 @@ class Backend(BaseBackend):
         """
         idle_logger.debug('[noidle] Fetching changes and cancelling idle mode...')
         self.client.send_noidle()
-        self._is_idle = False
+        self._isidle=False
         return self.client.fetch_idle()
-
-    def fetch_changes(self):
-        changes = self._noidle()
-        self.idle()
-        return changes
 
     # }} Methods dealing with idle mode
 
