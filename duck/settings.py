@@ -1,5 +1,5 @@
 LOG_LEVELS = {
-    #'status': 'debug',
-    #'idle': 'debug',
-    #'main': 'debug',
+    'status': 'debug',
+    'idle': 'debug',
+    'main': 'debug',
 }

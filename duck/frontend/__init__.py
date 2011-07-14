@@ -30,7 +30,7 @@ class BaseFrontend(object):
             errcode = 1
         sys.exit(errcode)
 
-    def async_refresh(self):
+    def async_refresh(self, changes):
         """
         Called by the backend to notify the frontend of changes in state.
         Might be called from another thread.

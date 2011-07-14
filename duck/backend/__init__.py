@@ -16,6 +16,9 @@ class BaseBackend(object):
     def __init__(self, frontend):
         self.frontend = frontend
     
+    def initialize(self):
+        raise NotImplementedError()
+
     def fetch_changes(self):
         raise NotImplementedError()
 

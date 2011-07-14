@@ -19,6 +19,7 @@ from threading import Event
 
 idle_logger = loggers.idle
 logger = loggers.main
+status_logger = loggers.status
 
 class Backend(BaseBackend):
     """
@@ -36,7 +37,13 @@ class Backend(BaseBackend):
         self.options = Backend.default_options.copy()
         if options:
             self.options.update(options)
+
+    def initialize(self):
         self._connect()
+        self.idle_request = Event()
+        self.idle_request.clear()
+        self.idle_thread = IdleThread(self)
+        self.idle_thread.start()
 
     def _connect(self):
         self.client = MPDClient()
@@ -51,10 +58,13 @@ class Backend(BaseBackend):
                 'Are your host/port settings correct?',
             ]
             raise BackendInitializeError('\n'.join(msg))
-        self.idle_request = Event()
-        self.idle_request.clear()
-        self.idle_thread = IdleThread(self)
-        self.idle_thread.start()
+
+    def start_command(self):
+        changes = self._noidle()
+        self.frontend.async_refresh(changes)
+
+    def end_command(self):
+        self.idle()
 
     def play(self, song_id=None):
         if song_id:
@@ -86,25 +96,25 @@ class Backend(BaseBackend):
     def clear(self):
         return self.client.clear()
 
-    # {{ Methods dealing with idle mode and thread synchronization.
+    # {{ Methods dealing with idle mode
 
     def idle(self):
         """
         Main thread marks it's idle.
         """
-        idle_logger.debug('\nsending idle')
+        self._is_idle = True
         self.client.send_idle()
-        idle_logger.debug('setting idle_request to true...\n')
+        idle_logger.debug('[idle]')
         self.idle_request.set()
 
     def _idle_wait(self):
         """
         Notification thread blocks on socket.
         """
-        idle_logger.debug('wait for idle_request...')
+        idle_logger.debug('[idle-wait] Waiting for idle_request...')
         self.idle_request.wait()
         self.idle_request.clear()
-        idle_logger.debug('Polling for changes...')
+        idle_logger.debug('[idle-poll] Polling for changes...')
         select.select([self.client], [], [])
 
     def _idle_wokeup(self):
@@ -113,19 +123,21 @@ class Backend(BaseBackend):
         """
         pass
 
-    def noidle(self):
+    def _noidle(self):
         """
         Main thread marks it's not idle anymore.
         """
+        idle_logger.debug('[noidle] Fetching changes and cancelling idle mode...')
         self.client.send_noidle()
-        idle_logger.debug('Fetching changes and cancelling idle mode...')
-        data = self.client.fetch_idle()
-        return data
-
-    def fetch_changes(self):
+        self._is_idle = False
         return self.client.fetch_idle()
 
-    # }}
+    def fetch_changes(self):
+        changes = self._noidle()
+        self.idle()
+        return changes
+
+    # }} Methods dealing with idle mode
 
     @property
     def current_song(self):
@@ -139,16 +151,18 @@ class Backend(BaseBackend):
         return self.status
 
     @property
-    def volume(self):
-        return int(self.status['volume'])
-
-    @property
     def playlist(self):
         return Playlist(self.client.playlistinfo())
 
     @property
     def playlistid(self):
         return self.client.playlistid()
+
+    # {{ Computed fields
+
+    @property
+    def volume(self):
+        return int(self.status['volume'])
 
     @property
     def elapsed_time(self):
@@ -157,6 +171,8 @@ class Backend(BaseBackend):
     @property
     def time(self):
         return int(self.status['time'].split(':')[1])
+
+    # }} Computed fields
 
     def disconnect(self):
         try:

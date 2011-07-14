@@ -11,7 +11,6 @@ from duck.log import loggers
 from gui.noname import MainWindow
 
 logger = loggers.main
-idle_logger = loggers.idle
 status_logger = loggers.status
 
 class ChangesEvent(wx.PyEvent):
@@ -21,10 +20,23 @@ class ChangesEvent(wx.PyEvent):
 
     REFRESH_EVT_ID = wx.NewId()
 
-    def __init__(self):
+    def __init__(self, changes):
         wx.PyEvent.__init__(self)
         self.SetEventType(self.REFRESH_EVT_ID)
+        self._changes = changes
 
+    def get_changes(self):
+        return self._changes
+
+def command(func):
+    def cmd_func(window, *args, **kwargs):
+        logger.debug('[begin] command %s' % func.__name__)
+        window.backend.start_command()
+        ret = func(window, *args, **kwargs)
+        window.backend.end_command()
+        logger.debug('[end] command %s' % func.__name__)
+        return ret
+    return cmd_func
 
 class WindowUpdater(object):
     '''
@@ -135,34 +147,6 @@ class EventHandler(object):
         self.win.progress_slider.Enable(False)
 
 
-class Command(object):
-    """
-    A decorator that automatically gets the new state and refreshes the Window.
-    """
-    def __init__(self, skip_updates=None):
-        self.skip_updates = skip_updates
-
-    def __call__(self, func):
-        def decorated(win, *args, **kwargs):
-            status_logger.debug('[%s command begin]' % func.__name__)
-
-            wx.PostEvent(win, ChangesEvent())
-
-            # Notify backend it's out of idle mode
-            win.handle_changes(win.backend.noidle(), self.skip_updates)
-            logger.debug('after handle_changes')
-
-            # call the actual method
-            ret = func(win, *args, **kwargs)
-
-            win.backend.idle()
-            idle_logger.debug('went idle')
-
-            status_logger.debug('[%s command end]' % func.__name__)
-            return ret
-        return decorated
-
-
 class DuckWindow(MainWindow):
 
     def __init__(self, *args, **kwargs):
@@ -170,26 +154,26 @@ class DuckWindow(MainWindow):
         self.backend = kwargs.pop('backend')
         MainWindow.__init__(self, *args, **kwargs)
 
+        self.updater = WindowUpdater(self)
+        self.handler = EventHandler(self)
+        self.progress_timer = wx.Timer(self, wx.ID_ANY)
+
         for (i,col) in enumerate((('Pos',       50),
                                   ('Artist',    200),
                                   ('Title',     200),
                                   ('Duration',  100))):
             self.playlist.InsertColumn(i, col[0], width=col[1])
-        self.playlist.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.do_change_song)
 
-        self.skip_refresh = False
-        self.updater = WindowUpdater(self)
-        self.handler = EventHandler(self)
-
-        self.Connect(-1, -1, ChangesEvent.REFRESH_EVT_ID, self.refresh)
-
-        self.progress_slider.SetValue(0)
-        self.progress_slider.Bind(wx.EVT_SLIDER, self.do_seek)
-        self.progress_timer = wx.Timer(self, wx.ID_ANY)
+        # Event bindings
         self.Bind(wx.EVT_TIMER, self.updater.update_progress)
-
+        self.Connect(-1, -1, ChangesEvent.REFRESH_EVT_ID, self.refresh)
+        self.playlist.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.do_change_song)
+        self.progress_slider.Bind(wx.EVT_SLIDER, self.do_seek)
         self.volume_slider.Bind(wx.EVT_SLIDER, self.do_volume_set)
 
+    def initialize(self):
+        self.progress_slider.SetValue(0)
+        self.backend.initialize()
         self.updater.reload_playlist()
         self.updater.update_status()
         self.backend.idle()
@@ -201,16 +185,15 @@ class DuckWindow(MainWindow):
         self.updater.update_status(skip_updates, changes)
 
     def refresh(self, event):
-        if not self.skip_refresh:
-            self.handle_changes(self.backend.noidle())
-            self.backend.idle()
-        self.skip_refresh = False
+        changes = event.get_changes()
+        if changes:
+            self.handle_changes(changes)
 
-    @Command()
+    @command
     def do_previous(self, event):
         self.backend.previous()
 
-    @Command()
+    @command
     def do_play(self, event):
         if self.backend.playlist.songs:
             self.backend.play()
@@ -219,42 +202,40 @@ class DuckWindow(MainWindow):
             # TODO: Show a dialog with message
             print 'Playlist is empty'
 
-    @Command()
+    @command
     def do_pause(self, event):
         self.backend.pause()
 
-    @Command()
+    @command
     def do_stop(self, event):
         self.backend.stop()
 
-    @Command()
+    @command
     def do_next(self, event):
         logger.debug('do_next')
         self.backend.next()
 
-    @Command()
+    @command
     def do_change_song(self, event):
         self.backend.playid(event.GetItem().GetData())
 
-    @Command(skip_updates=set(['progress_slider']))
+    @command
     def do_seek(self, event):
         logger.debug(event.GetEventType())
         slider = event.GetEventObject()
         self.backend.seek(slider.GetValue())
 
-    @Command(skip_updates=set(['volume_slider']))
+    @command
     def do_volume_set(self, event):
         logger.debug('volume set')
         logger.debug(event.GetEventType())
         val = event.GetEventObject().GetValue()
         self.backend.setvol(val)
 
-    @Command()
+    @command
     def do_clear(self, event):
         self.backend.clear()
 
-
-# Add command methods
 class Frontend(BaseFrontend):
     """
     A frontend, implemented using wxwidgets.
@@ -266,11 +247,12 @@ class Frontend(BaseFrontend):
         """
         self.application = wx.App()
         self.main_window = DuckWindow(None, backend=self.backend)
+        self.main_window.initialize()
         self.main_window.Show()
         self.application.SetTopWindow(self.main_window)
         return self.application.MainLoop()
 
-    def async_refresh(self):
-        wx.PostEvent(self.main_window, ChangesEvent())
+    def async_refresh(self, changes=None):
+        wx.PostEvent(self.main_window, ChangesEvent(changes))
 
 
