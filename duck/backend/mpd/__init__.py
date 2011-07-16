@@ -35,11 +35,14 @@ class Backend(BaseBackend):
         options = kwargs.pop('options', None)
         BaseBackend.__init__(self, *args, **kwargs)
         self.options = Backend.default_options.copy()
+        self._last_status = None
+        self.status = None
         if options:
             self.options.update(options)
 
     def initialize(self):
         self._connect()
+        self._changes = None
         self.idle_request = Event()
         self.idle_request.clear()
         self.idle_thread = IdleThread(self)
@@ -72,6 +75,13 @@ class Backend(BaseBackend):
     def end_command(self):
         self.idle()
 
+    def add_artist(self, artist):
+        for f in self.client.list('file', 'artist', artist):
+            self.client.add(f)
+
+    def add_album(self, album):
+        pass
+
     def play(self, song_id=None):
         if song_id:
             return self.client.play(song_id)
@@ -101,6 +111,9 @@ class Backend(BaseBackend):
 
     def clear(self):
         return self.client.clear()
+
+    def list(self, *args):
+        return self.client.list(*args)
 
     # {{ Methods dealing with idle mode
 
@@ -149,8 +162,16 @@ class Backend(BaseBackend):
             return Song(song_dict)
 
     def get_status(self):
+        self._last_status = self.status
         self.status = self.client.status()
         return self.status
+
+    def playlist_changes(self):
+        if self.status and self._last_status:
+            #self.client.plchangesposid(self._last_status['playlist'])
+            print self._last_status['playlistlength'], self.status['playlistlength']
+            return []
+        return []
 
     @property
     def playlist(self):

@@ -80,29 +80,14 @@ class WindowUpdater(object):
         getattr(self.win.handler, 'on_' + state)()
         self.state = state
         if changes and 'playlist' in changes:
-            self.reload_playlist()
+            self.playlist.refresh()
         if state != 'stop':
             self.update(skip_updates)
 
-    def reload_playlist(self):
-        pl = self.win.playlist
-
-        pl.DeleteAllItems()
-
-        current_song = self.win.backend.current_song
-
-        for row, song in enumerate(self.win.backend.playlist.songs):
-            item = wx.ListItem()
-            item.SetData(long(song.id))
-            item.SetId(row + 1)
-
-            idx = pl.InsertItem(item)
-            pl.SetStringItem(idx, 0, str(song.pos + 1))
-            pl.SetStringItem(idx, 1, song.artist)
-            pl.SetStringItem(idx, 2, song.title)
-            pl.SetStringItem(idx, 3, str(song.time))
-
-        self.win.playlist = pl
+    def reload_library(self):
+        for c in [self.win.album_list, self.win.song_list]:
+            c.DeleteAllItems()
+        self.win.artist_list.refresh()
 
     def common_update(self):
         """
@@ -120,6 +105,10 @@ class WindowUpdater(object):
             self.win.playlist.SetItemFont(self.current_song, self.BOLD_FONT)
             self.win.playlist.SetItemState(self.current_song, wx.LIST_STATE_FOCUSED, wx.LIST_STATE_FOCUSED)
             self.win.playlist.EnsureVisible(self.current_song)
+
+        playlist_changes = self.win.backend.playlist_changes()
+        if playlist_changes:
+            self.playlist.refresh()
 
         if self.win.backend.status['state'] == 'play':
             self.win.progress_timer.Start(1000, oneShot=False)
@@ -157,31 +146,32 @@ class DuckWindow(MainWindow):
         self.backend = kwargs.pop('backend')
         MainWindow.__init__(self, *args, **kwargs)
 
+        for c in [self.playlist, self.artist_list, self.album_list]:
+            c.initialize(self)
+
         self.updater = WindowUpdater(self)
         self.handler = EventHandler(self)
         self.progress_timer = wx.Timer(self, wx.ID_ANY)
 
-        for (i,col) in enumerate((('Pos',       50),
-                                  ('Artist',    200),
-                                  ('Title',     200),
-                                  ('Duration',  100))):
-            self.playlist.InsertColumn(i, col[0], width=col[1])
+        self.song_list.InsertColumn(0, 'Song')
 
         # Event bindings
-        self.Bind(wx.EVT_TIMER, self.updater.update_progress)
         self.Connect(-1, -1, ChangesEvent.REFRESH_EVT_ID, self.refresh)
-        self.playlist.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.do_change_song)
+        self.Bind(wx.EVT_TIMER, self.updater.update_progress)
         self.progress_slider.Bind(wx.EVT_SLIDER, self.do_seek)
         self.volume_slider.Bind(wx.EVT_SLIDER, self.do_volume_set)
 
     def initialize(self):
         self.progress_slider.SetValue(0)
+        self.notebook.ChangeSelection(0)
         self.backend.initialize()
-        self.updater.reload_playlist()
+        self.playlist.refresh()
+        self.updater.reload_library()
         self.updater.update_status()
         self.backend.idle()
 
     def handle_changes(self, changes, skip_updates=None):
+        print 'changeS: %s' % changes
         if changes:
             logger.debug('changes:\n%s' % changes)
         status_logger.debug('[handle_changes]')
@@ -191,6 +181,35 @@ class DuckWindow(MainWindow):
         with self.backend as b:
             changes = event.get_changes()
             self.handle_changes(changes)
+
+    @command
+    def do_filter_artist(self, event):
+        selected_artist = event.GetItem().GetText()
+        self.album_list.load(sorted(self.backend.list('album', 'artist', selected_artist)))
+
+        self.song_list.DeleteAllItems()
+
+        for row, a in enumerate(
+            sorted(self.backend.list('title', 'artist', selected_artist))):
+
+                item = wx.ListItem()
+                item.SetId(row + 1)
+                item.SetText(a)
+                self.song_list.InsertItem(item)
+        self.song_list.SetColumnWidth(0, wx.LIST_AUTOSIZE)
+
+    @command
+    def do_filter_album(self, event):
+        self.song_list.DeleteAllItems()
+        selected_album = event.GetItem().GetText()
+        for row, a in enumerate(
+            sorted(self.backend.list('title', 'album', selected_album))):
+
+                item = wx.ListItem()
+                item.SetId(row + 1)
+                item.SetText(a)
+                self.song_list.InsertItem(item)
+        self.song_list.SetColumnWidth(0, wx.LIST_AUTOSIZE)
 
     @command
     def do_previous(self, event):
@@ -238,6 +257,14 @@ class DuckWindow(MainWindow):
     @command
     def do_clear(self, event):
         self.backend.clear()
+
+    @command
+    def do_add_artist(self, event):
+        self.backend.add_artist(event.GetItem().GetText())
+
+    @command
+    def do_add_album(self, event):
+        self.backend.add_album(event.GetItem().GetText())
 
 class Frontend(BaseFrontend):
     """

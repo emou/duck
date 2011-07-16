@@ -7,7 +7,7 @@
 		<object class="wxNotebook" name="notebook">
 			<object class="notebookpage">
 				<label>Now playing</label>
-				<selected>1</selected>
+				<selected>0</selected>
 				<object class="wxPanel" name="now_playing_page">
 					<style>wxTAB_TRAVERSAL</style>
 					<object class="wxFlexGridSizer">
@@ -132,7 +132,7 @@
 							<option>1</option>
 							<flag>wxEXPAND</flag>
 							<border>5</border>
-							<object class="wxListCtrl" name="playlist">
+							<object class="wxListCtrl" name="playlist" subclass="PlaylistCtrl">
 								<style>wxLC_REPORT</style>
 							</object>
 						</object>
@@ -141,33 +141,38 @@
 			</object>
 			<object class="notebookpage">
 				<label>Library</label>
-				<selected>0</selected>
-				<object class="wxPanel" name="page_library">
+				<selected>1</selected>
+				<object class="wxPanel" name="library_page">
 					<style>wxTAB_TRAVERSAL</style>
-					<object class="wxBoxSizer">
-						<orient>wxHORIZONTAL</orient>
+					<object class="wxFlexGridSizer">
+						<rows>2</rows>
+						<cols>2</cols>
+						<vgap>0</vgap>
+						<hgap>0</hgap>
+						<growablecols>0,1</growablecols>
+						<growablerows>0,1</growablerows>
 						<object class="sizeritem">
 							<option>1</option>
-							<flag>wxEXPAND</flag>
+							<flag>wxALL|wxEXPAND</flag>
 							<border>5</border>
-							<object class="wxListCtrl" name="artist_list">
-								<style>wxLC_AUTOARRANGE|wxLC_ICON|wxLC_NO_HEADER</style>
+							<object class="wxListCtrl" name="artist_list" subclass="ArtistListCtrl">
+								<style>wxLC_NO_HEADER|wxLC_REPORT</style>
 							</object>
 						</object>
 						<object class="sizeritem">
-							<option>1</option>
-							<flag>wxEXPAND</flag>
-							<border>5</border>
-							<object class="wxListCtrl" name="album_list">
-								<style>wxLC_ICON</style>
-							</object>
-						</object>
-						<object class="sizeritem">
-							<option>1</option>
-							<flag>wxEXPAND</flag>
+							<option>0</option>
+							<flag>wxALL|wxEXPAND</flag>
 							<border>5</border>
 							<object class="wxListCtrl" name="song_list">
-								<style>wxLC_ICON</style>
+								<style>wxLC_ICON|wxLC_NO_HEADER|wxLC_REPORT</style>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>1</option>
+							<flag>wxALL|wxEXPAND</flag>
+							<border>5</border>
+							<object class="wxListCtrl" name="album_list" subclass="AlbumListCtrl">
+								<style>wxLC_ICON|wxLC_NO_HEADER|wxLC_REPORT</style>
 							</object>
 						</object>
 					</object>
@@ -176,7 +181,7 @@
 			<object class="notebookpage">
 				<label>External devices</label>
 				<selected>0</selected>
-				<object class="wxPanel" name="page_devices">
+				<object class="wxPanel" name="devices_page">
 					<style>wxTAB_TRAVERSAL</style>
 				</object>
 			</object>
