@@ -9,6 +9,7 @@
 
 from duck.frontend.wxwidgets.playlist import PlaylistCtrl
 from duck.frontend.wxwidgets.artistlist import ArtistListCtrl
+from duck.frontend.wxwidgets.songlist import SongListCtrl
 from duck.frontend.wxwidgets.albumlist import AlbumListCtrl
 import wx
 
@@ -102,7 +103,7 @@ class MainWindow ( wx.Frame ):
 		self.artist_list = ArtistListCtrl( self.library_page, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_NO_HEADER|wx.LC_REPORT )
 		library_sizer.Add( self.artist_list, 1, wx.ALL|wx.EXPAND, 5 )
 		
-		self.song_list = wx.ListCtrl( self.library_page, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_ICON|wx.LC_NO_HEADER|wx.LC_REPORT )
+		self.song_list = SongListCtrl( self.library_page, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_ICON|wx.LC_NO_HEADER|wx.LC_REPORT )
 		library_sizer.Add( self.song_list, 0, wx.ALL|wx.EXPAND, 5 )
 		
 		self.album_list = AlbumListCtrl( self.library_page, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_ICON|wx.LC_NO_HEADER|wx.LC_REPORT )

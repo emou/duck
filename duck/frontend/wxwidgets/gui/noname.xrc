@@ -163,7 +163,7 @@
 							<option>0</option>
 							<flag>wxALL|wxEXPAND</flag>
 							<border>5</border>
-							<object class="wxListCtrl" name="song_list">
+							<object class="wxListCtrl" name="song_list" subclass="SongListCtrl">
 								<style>wxLC_ICON|wxLC_NO_HEADER|wxLC_REPORT</style>
 							</object>
 						</object>

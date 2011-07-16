@@ -53,12 +53,6 @@ class WindowUpdater(object):
         self.state = None
         self.current_song = None
 
-        # The wx.App object must be created first!
-        self.NORMAL_FONT = wx.Font(10, wx.FONTFAMILY_DEFAULT,
-                                   wx.FONTSTYLE_NORMAL, wx.NORMAL)
-        self.BOLD_FONT   = wx.Font(10, wx.FONTFAMILY_DEFAULT,
-                                   wx.FONTSTYLE_NORMAL, wx.BOLD)
-
     def update(self, skip_updates=None):
         self.common_update()
         for u in self.updates - set(skip_updates or []):
@@ -94,17 +88,13 @@ class WindowUpdater(object):
         Called everytime something changes.
         """
         status_logger.debug('[common_update]')
-        song = self.win.backend.current_song
+        new_song = self.win.backend.current_song
 
-        if self.current_song != long(song.pos):
-            if self.current_song is not None:
-                self.win.playlist.SetItemFont(self.current_song, self.NORMAL_FONT)
-            self.win.SetTitle('%s - %s' % (song.artist, song.title))
-            self.win.status_bar.SetStatusText('%s - %s' % (song.artist, song.title))
-            self.current_song = long(song.pos)
-            self.win.playlist.SetItemFont(self.current_song, self.BOLD_FONT)
-            self.win.playlist.SetItemState(self.current_song, wx.LIST_STATE_FOCUSED, wx.LIST_STATE_FOCUSED)
-            self.win.playlist.EnsureVisible(self.current_song)
+        if self.current_song is None or self.current_song.pos != new_song.pos:
+            self.win.playlist.change_song(self.current_song, new_song)
+            self.current_song = new_song
+            self.win.SetTitle('%s - %s' % (new_song.artist, new_song.title))
+            self.win.status_bar.SetStatusText('%s - %s' % (new_song.artist, new_song.title))
 
         playlist_changes = self.win.backend.playlist_changes()
         if playlist_changes:
@@ -146,14 +136,12 @@ class DuckWindow(MainWindow):
         self.backend = kwargs.pop('backend')
         MainWindow.__init__(self, *args, **kwargs)
 
-        for c in [self.playlist, self.artist_list, self.album_list]:
+        for c in [self.playlist, self.artist_list, self.album_list, self.song_list]:
             c.initialize(self)
 
         self.updater = WindowUpdater(self)
         self.handler = EventHandler(self)
         self.progress_timer = wx.Timer(self, wx.ID_ANY)
-
-        self.song_list.InsertColumn(0, 'Song')
 
         # Event bindings
         self.Connect(-1, -1, ChangesEvent.REFRESH_EVT_ID, self.refresh)
@@ -186,30 +174,12 @@ class DuckWindow(MainWindow):
     def do_filter_artist(self, event):
         selected_artist = event.GetItem().GetText()
         self.album_list.load(sorted(self.backend.list('album', 'artist', selected_artist)))
-
-        self.song_list.DeleteAllItems()
-
-        for row, a in enumerate(
-            sorted(self.backend.list('title', 'artist', selected_artist))):
-
-                item = wx.ListItem()
-                item.SetId(row + 1)
-                item.SetText(a)
-                self.song_list.InsertItem(item)
-        self.song_list.SetColumnWidth(0, wx.LIST_AUTOSIZE)
+        self.song_list.load(sorted(self.backend.list('title', 'artist', selected_artist)))
 
     @command
     def do_filter_album(self, event):
-        self.song_list.DeleteAllItems()
         selected_album = event.GetItem().GetText()
-        for row, a in enumerate(
-            sorted(self.backend.list('title', 'album', selected_album))):
-
-                item = wx.ListItem()
-                item.SetId(row + 1)
-                item.SetText(a)
-                self.song_list.InsertItem(item)
-        self.song_list.SetColumnWidth(0, wx.LIST_AUTOSIZE)
+        self.song_list.load(sorted(self.backend.list('title', 'album', selected_album)))
 
     @command
     def do_previous(self, event):
