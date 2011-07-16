@@ -40,8 +40,10 @@ class PlaylistCtrl(wx.ListCtrl):
 
 
     def change_song(self, old_song, new_song):
+        new_pos = long(new_song.pos)
         if old_song is not None:
-            self.SetItemFont(long(old_song.pos), self.NORMAL_FONT)
-        self.SetItemFont(long(new_song.pos), self.BOLD_FONT)
-        self.SetItemState(long(new_song.pos), wx.LIST_STATE_FOCUSED, wx.LIST_STATE_FOCUSED)
-        self.EnsureVisible(long(new_song.pos))
+            old_pos = long(old_song.pos)
+            self.SetItemFont(old_pos, self.NORMAL_FONT)
+        self.SetItemFont(new_pos, self.BOLD_FONT)
+        self.SetItemState(new_pos, wx.LIST_STATE_FOCUSED, wx.LIST_STATE_FOCUSED)
+        self.EnsureVisible(new_pos)
