@@ -47,3 +47,9 @@ class PlaylistCtrl(wx.ListCtrl):
         self.SetItemFont(new_pos, self.BOLD_FONT)
         self.SetItemState(new_pos, wx.LIST_STATE_FOCUSED, wx.LIST_STATE_FOCUSED)
         self.EnsureVisible(new_pos)
+
+    def add_artist(self, artist):
+        """
+        Adds all songs of the artist.
+        """
+        pass

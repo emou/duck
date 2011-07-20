@@ -38,98 +38,13 @@ def command(func):
         return ret
     return cmd_func
 
-class WindowUpdater(object):
-    '''
-    An object that updates the window based on changes.
-    '''
+class DuckWindow(MainWindow):
 
     updates = set([
         'progress_slider',
         'volume_slider',
     ])
 
-    def __init__(self, win):
-        self.win = win
-        self.state = None
-        self.current_song = None
-
-    def update(self, skip_updates=None):
-        self.common_update()
-        for u in self.updates - set(skip_updates or []):
-            getattr(self, 'update_' + u)()
-
-    def update_progress_slider(self):
-        self.win.progress_slider.SetRange(0, self.win.backend.time)
-        self.win.progress_slider.SetValue(self.win.backend.elapsed_time)
-
-    def update_volume_slider(self):
-        self.win.volume_slider.SetValue(self.win.backend.volume)
-
-    def update_progress(self, event):
-        self.win.progress_slider.SetValue(self.win.progress_slider.GetValue() + 1)
-
-    def update_status(self, skip_updates=None, changes=None):
-        status_logger.debug('[update_status]')
-        state = self.win.backend.get_status()['state']
-        getattr(self.win.handler, 'on_' + state)()
-        self.state = state
-        if changes and 'playlist' in changes:
-            self.playlist.refresh()
-        if state != 'stop':
-            self.update(skip_updates)
-
-    def reload_library(self):
-        for c in [self.win.album_list, self.win.song_list]:
-            c.DeleteAllItems()
-        self.win.artist_list.refresh()
-
-    def common_update(self):
-        """
-        Called everytime something changes.
-        """
-        status_logger.debug('[common_update]')
-        new_song = self.win.backend.current_song
-
-        if self.current_song is None or self.current_song.pos != new_song.pos:
-            self.win.playlist.change_song(self.current_song, new_song)
-            self.current_song = new_song
-            self.win.SetTitle('%s - %s' % (new_song.artist, new_song.title))
-            self.win.status_bar.SetStatusText('%s - %s' % (new_song.artist, new_song.title))
-
-        playlist_changes = self.win.backend.playlist_changes()
-        if playlist_changes:
-            self.playlist.refresh()
-
-        if self.win.backend.status['state'] == 'play':
-            self.win.progress_timer.Start(1000, oneShot=False)
-
-
-class EventHandler(object):
-    """
-    An object that handles window events.
-    """
-
-    def __init__(self, win):
-        self.win = win
-
-    def on_play(self):
-        self.win.progress_slider.Enable(True)
-
-    def on_stop(self):
-        self.stop_timer()
-        self.win.progress_slider.SetValue(0)
-        self.win.progress_slider.Enable(False)
-
-    def stop_timer(self):
-        if self.win.progress_timer.IsRunning():
-            self.win.progress_timer.Stop()
-
-    def on_pause(self):
-        self.stop_timer()
-        self.win.progress_slider.Enable(False)
-
-
-class DuckWindow(MainWindow):
 
     def __init__(self, *args, **kwargs):
         assert 'backend' in kwargs
@@ -139,13 +54,13 @@ class DuckWindow(MainWindow):
         for c in [self.playlist, self.artist_list, self.album_list, self.song_list]:
             c.initialize(self)
 
-        self.updater = WindowUpdater(self)
-        self.handler = EventHandler(self)
         self.progress_timer = wx.Timer(self, wx.ID_ANY)
+        self.state = None
+        self.current_song = None
 
         # Event bindings
         self.Connect(-1, -1, ChangesEvent.REFRESH_EVT_ID, self.refresh)
-        self.Bind(wx.EVT_TIMER, self.updater.update_progress)
+        self.Bind(wx.EVT_TIMER, self.update_progress)
         self.progress_slider.Bind(wx.EVT_SLIDER, self.do_seek)
         self.volume_slider.Bind(wx.EVT_SLIDER, self.do_volume_set)
 
@@ -154,8 +69,8 @@ class DuckWindow(MainWindow):
         self.notebook.ChangeSelection(0)
         self.backend.initialize()
         self.playlist.refresh()
-        self.updater.reload_library()
-        self.updater.update_status()
+        self.reload_library()
+        self.update_status()
         self.backend.idle()
 
     def handle_changes(self, changes, skip_updates=None):
@@ -163,7 +78,7 @@ class DuckWindow(MainWindow):
         if changes:
             logger.debug('changes:\n%s' % changes)
         status_logger.debug('[handle_changes]')
-        self.updater.update_status(skip_updates, changes)
+        self.update_status(skip_updates, changes)
 
     def refresh(self, event):
         with self.backend as b:
@@ -173,13 +88,16 @@ class DuckWindow(MainWindow):
     @command
     def do_filter_artist(self, event):
         selected_artist = event.GetItem().GetText()
-        self.album_list.load(sorted(self.backend.list('album', 'artist', selected_artist)))
-        self.song_list.load(sorted(self.backend.list('title', 'artist', selected_artist)))
+        self.album_list.load(sorted(self.backend.list(
+            'album', 'artist', selected_artist)))
+        self.song_list.load(sorted(self.backend.list(
+            'title', 'artist', selected_artist)))
 
     @command
     def do_filter_album(self, event):
         selected_album = event.GetItem().GetText()
-        self.song_list.load(sorted(self.backend.list('title', 'album', selected_album)))
+        self.song_list.load(sorted(self.backend.list(
+            'title', 'album', selected_album)))
 
     @command
     def do_previous(self, event):
@@ -227,14 +145,78 @@ class DuckWindow(MainWindow):
     @command
     def do_clear(self, event):
         self.backend.clear()
+        wx.PostEvent(self, ChangesEvent(['playlist']))
 
     @command
     def do_add_artist(self, event):
         self.backend.add_artist(event.GetItem().GetText())
+        wx.PostEvent(self, ChangesEvent(['playlist']))
 
     @command
     def do_add_album(self, event):
         self.backend.add_album(event.GetItem().GetText())
+        wx.PostEvent(self, ChangesEvent(['playlist']))
+
+    def on_play(self):
+        self.progress_slider.Enable(True)
+
+    def on_stop(self):
+        self.stop_timer()
+        self.progress_slider.SetValue(0)
+        self.progress_slider.Enable(False)
+
+    def stop_timer(self):
+        if self.progress_timer.IsRunning():
+            self.progress_timer.Stop()
+
+    def on_pause(self):
+        self.stop_timer()
+        self.progress_slider.Enable(False)
+
+    def update(self, skip_updates=None):
+        status_logger.debug('[update]')
+        new_song = self.backend.current_song
+
+        if self.current_song is None or self.current_song.pos != new_song.pos:
+            self.playlist.change_song(self.current_song, new_song)
+            self.current_song = new_song
+            self.SetTitle('%s - %s' % (new_song.artist, new_song.title))
+            self.status_bar.SetStatusText('%s - %s' % (new_song.artist, new_song.title))
+
+        playlist_changes = self.backend.playlist_changes()
+        if playlist_changes:
+            self.playlist.refresh()
+
+        if self.backend.status['state'] == 'play':
+            self.progress_timer.Start(1000, oneShot=False)
+        for u in self.updates - set(skip_updates or []):
+            getattr(self, 'update_' + u)()
+
+    def update_progress_slider(self):
+        self.progress_slider.SetRange(0, self.backend.time)
+        self.progress_slider.SetValue(self.backend.elapsed_time)
+
+    def update_volume_slider(self):
+        self.volume_slider.SetValue(self.backend.volume)
+
+    def update_progress(self, event):
+        self.progress_slider.SetValue(self.progress_slider.GetValue() + 1)
+
+    def update_status(self, skip_updates=None, changes=None):
+        status_logger.debug('[update_status]')
+        state = self.backend.get_status()['state']
+        getattr(self, 'on_' + state)()
+        self.state = state
+        if changes and 'playlist' in changes:
+            self.playlist.refresh()
+        if state != 'stop':
+            self.update(skip_updates)
+
+    def reload_library(self):
+        for c in [self.album_list, self.song_list]:
+            c.DeleteAllItems()
+        self.artist_list.refresh()
+
 
 class Frontend(BaseFrontend):
     """
@@ -254,5 +236,4 @@ class Frontend(BaseFrontend):
 
     def async_refresh(self, changes=None):
         wx.PostEvent(self.main_window, ChangesEvent(changes))
-
 
