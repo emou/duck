@@ -6,7 +6,7 @@ except ImportError:
 from threading import Thread
 
 from duck.frontend import BaseFrontend
-from duck.errors import FrontendInitializeError
+from duck.errors import FrontendInitializeError, BackendInitializeError, FatalError
 from duck.log import loggers
 from gui.noname import MainWindow
 
@@ -18,11 +18,11 @@ class ChangesEvent(wx.PyEvent):
     An event representing an MPD status change.
     """
 
-    REFRESH_EVT_ID = wx.NewId()
+    CHANGES_EVT_ID = wx.NewId()
 
     def __init__(self, changes):
         wx.PyEvent.__init__(self)
-        self.SetEventType(self.REFRESH_EVT_ID)
+        self.SetEventType(self.CHANGES_EVT_ID)
         self._changes = changes
 
     def get_changes(self):
@@ -59,7 +59,7 @@ class DuckWindow(MainWindow):
         self.current_song = None
 
         # Event bindings
-        self.Connect(-1, -1, ChangesEvent.REFRESH_EVT_ID, self.refresh)
+        self.Connect(-1, -1, ChangesEvent.CHANGES_EVT_ID, self.refresh)
         self.Bind(wx.EVT_TIMER, self.update_progress)
         self.progress_slider.Bind(wx.EVT_SLIDER, self.do_seek)
         self.volume_slider.Bind(wx.EVT_SLIDER, self.do_volume_set)
@@ -67,14 +67,27 @@ class DuckWindow(MainWindow):
     def initialize(self):
         self.progress_slider.SetValue(0)
         self.notebook.ChangeSelection(0)
-        self.backend.initialize()
+
+        initialized = False
+        while not initialized:
+            try:
+                self.backend.initialize()
+                initialized = True
+            except BackendInitializeError, e:
+                dlg = wx.MessageDialog(
+                    None,
+                    'An error occured while initializing the backend:\n%s' % e,
+                    'Backend error'
+                )
+                choice = dlg.ShowModal()
+                if choice != wx.ID_OK:
+                    raise FatalError()
         self.playlist.refresh()
         self.reload_library()
         self.update_status()
         self.backend.idle()
 
     def handle_changes(self, changes, skip_updates=None):
-        print 'changeS: %s' % changes
         if changes:
             logger.debug('changes:\n%s' % changes)
         status_logger.debug('[handle_changes]')

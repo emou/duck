@@ -54,11 +54,11 @@ class Backend(BaseBackend):
             self.client.connect(self.options['host'], self.options['port'])
         except (MPDError, socket.error) as e:
             msg = [
-                'Could not connect to MPD Server at '
-                '%(host)s:%(port)s.' % self.options,
+                'Could not connect to MPD Server at %(host)s:%(port)s.' % self.options,
                 'Returned error was: %s.' % e,
                 'Is the mpd server running?',
-                'Are your host/port settings correct?',
+                'Check your host port settings and make sure the MPD server is running.',
+                'Press OK if you want to try again or Cancel to exit.',
             ]
             raise BackendInitializeError('\n'.join(msg))
 

@@ -1,11 +1,13 @@
 import wx
 
 class AlbumListCtrl(wx.ListCtrl):
+
     def initialize(self, main_window):
         self.main_window = main_window
         self.InsertColumn(0, 'Album')
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.main_window.do_filter_album)
         self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.main_window.do_add_album)
+        self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.item_right_click)
 
     def refresh(self):
         pass
@@ -18,3 +20,10 @@ class AlbumListCtrl(wx.ListCtrl):
                 item.SetText(a)
                 self.InsertItem(item)
         self.SetColumnWidth(0, wx.LIST_AUTOSIZE)
+
+    def item_right_click(self, event):
+        pass
+        #print 'hah!'
+        #menu = wx.Menu()
+        #menu.Append()
+        #self.main_window.Popup(menu)

@@ -1,7 +1,12 @@
 import wx
 
-class PlaylistCtrl(wx.ListCtrl):
+from duck.frontend.wxwidgets.mixins import ListCtrlAutoRelativeWidthMixin
 
+class PlaylistCtrl(wx.ListCtrl, ListCtrlAutoRelativeWidthMixin):
+
+    def __init__(self, *args, **kwargs):
+        wx.ListCtrl.__init__(self, *args, **kwargs)
+        ListCtrlAutoRelativeWidthMixin.__init__(self)
 
     def initialize(self, main_window):
        self.main_window = main_window
@@ -20,7 +25,6 @@ class PlaylistCtrl(wx.ListCtrl):
 
        self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.main_window.do_change_song)
 
-
     def refresh(self):
 
         self.DeleteAllItems()
@@ -38,7 +42,6 @@ class PlaylistCtrl(wx.ListCtrl):
             self.SetStringItem(idx, 2, song.title)
             self.SetStringItem(idx, 3, str(song.time))
 
-
     def change_song(self, old_song, new_song):
         new_pos = long(new_song.pos)
         if old_song is not None:
@@ -53,3 +56,8 @@ class PlaylistCtrl(wx.ListCtrl):
         Adds all songs of the artist.
         """
         pass
+
+    def on_list_item_right_click(self, event):
+        pass
+
+
