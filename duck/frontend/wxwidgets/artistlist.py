@@ -18,9 +18,12 @@ class ArtistContextMenu(wx.Menu):
         if eid==self.ADD_ID:
             with self.main_window.backend:
                 self.main_window.backend.add_artist(self.artist)
-            wx.PostEvent(self.main_window, duck.frontend.wxwidgets.ChangesEvent(['playlist']))
         elif eid==self.REPLACE_ID:
-            pass
+            with self.main_window.backend:
+                self.main_window.backend.replace_artist(self.artist)
+        else:
+            return
+        wx.PostEvent(self.main_window, duck.frontend.wxwidgets.ChangesEvent(['playlist']))
 
 class ArtistListCtrl(wx.ListCtrl):
 
