@@ -168,8 +168,10 @@ class Backend(BaseBackend):
 
     def playlist_changes(self):
         if self.status and self._last_status:
-            #self.client.plchangesposid(self._last_status['playlist'])
-            print self._last_status['playlistlength'], self.status['playlistlength']
+            # TODO: check this:
+            # self._last_status['playlistlength'] != self.status['playlistlength']
+            # and optimize refresh
+            # self.client.plchangesposid(self._last_status['playlist'])
             return []
         return []
 

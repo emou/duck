@@ -23,7 +23,3 @@ class AlbumListCtrl(wx.ListCtrl):
 
     def item_right_click(self, event):
         pass
-        #print 'hah!'
-        #menu = wx.Menu()
-        #menu.Append()
-        #self.main_window.Popup(menu)
