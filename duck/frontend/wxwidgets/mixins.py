@@ -30,15 +30,16 @@ class ListCtrlAutoRelativeWidthMixin:
         """
         self.Bind(wx.EVT_SIZE, self._onResize)
         self.Bind(wx.EVT_LIST_COL_END_DRAG, self._onResize, self)
+        self.Bind(wx.EVT_LIST_DELETE_ALL_ITEMS, self._onResize)
+        self._doResize()
 
     # =====================
     # == Private Methods ==
     # =====================
 
     def _onResize(self, event):
-        """ Respond to the wx.ListCtrl being resized.
-
-            We automatically resize the last column in the list.
+        """
+        Respond to the wx.ListCtrl being resized.
         """
         if 'gtk2' in wx.PlatformInfo:
             self._doResize()
@@ -48,8 +49,6 @@ class ListCtrlAutoRelativeWidthMixin:
 
 
     def _doResize(self):
-        """
-        """
         if not self:  # avoid a PyDeadObject error
             return
 
@@ -68,6 +67,9 @@ class ListCtrlAutoRelativeWidthMixin:
             if self.GetItemCount() > self.GetCountPerPage():
                 scrollWidth = wx.SystemSettings_GetMetric(wx.SYS_VSCROLL_X)
                 listWidth = listWidth - scrollWidth
+
+        for col in range(numCols):
+            self.SetColumnWidth(col, wx.LIST_AUTOSIZE)
 
         totColWidth = sum(self.GetColumnWidth(col) for col in range(numCols))
         totColWidth = max(1, totColWidth)

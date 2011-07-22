@@ -1,6 +1,8 @@
 import wx
 
-class SongListCtrl(wx.ListCtrl):
+from duck.frontend.wxwidgets.nicelist import NiceListCtrl
+
+class SongListCtrl(NiceListCtrl):
 
     def initialize(self, main_window):
         self.main_window = main_window
@@ -16,7 +18,6 @@ class SongListCtrl(wx.ListCtrl):
                 item.SetId(row + 1)
                 item.SetText(a)
                 self.InsertItem(item)
-        self.SetColumnWidth(0, wx.LIST_AUTOSIZE)
 
     def on_list_item_right_click(self, event):
         pass

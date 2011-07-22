@@ -1,12 +1,8 @@
 import wx
 
-from duck.frontend.wxwidgets.mixins import ListCtrlAutoRelativeWidthMixin
+from duck.frontend.wxwidgets.nicelist import NiceListCtrl
 
-class PlaylistCtrl(wx.ListCtrl, ListCtrlAutoRelativeWidthMixin):
-
-    def __init__(self, *args, **kwargs):
-        wx.ListCtrl.__init__(self, *args, **kwargs)
-        ListCtrlAutoRelativeWidthMixin.__init__(self)
+class PlaylistCtrl(NiceListCtrl):
 
     def initialize(self, main_window):
        self.main_window = main_window

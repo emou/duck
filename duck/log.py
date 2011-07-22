@@ -2,7 +2,7 @@ import logging
 import settings
 
 class LogRegistry(object):
-    ''' Singleton class that holds all loggers. '''
+    """ A singleton that holds all loggers. """
 
     _loggers = {}
     _log_levels = {
