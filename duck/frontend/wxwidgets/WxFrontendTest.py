@@ -1,8 +1,9 @@
 import unittest
 import wx
 
-from duck.frontend.wxwidgets import Frontend, DuckWindow
 from duck.backend import BaseBackend
+from duck.errors import BackendInitializeError, FatalError
+from duck.frontend.wxwidgets import Frontend, DuckWindow
 
 
 class SongMock(object):
@@ -125,6 +126,29 @@ class DuckWindowTestCase(unittest.TestCase):
         # Assert current song is visible. A bit of a bogus test as we have a
         # low number of songs, but still...
         self.assertTrue(playlist.GetViewRect().InsideRect(playlist.GetItemRect(song_pos)))
+    
+    def test_initialize_error(self):
+        def err():
+            raise BackendInitializeError()
+        self.backend.initialize = err
+
+        self._dialog_showed = False
+        def click_after_show(show):
+            def _clickAfter(dialog, *args, **kwargs):
+                """
+                Don't actually show the dialog.
+                Just process the event.
+                """
+                self._dialog_showed = True
+                clickEvent = wx.CommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED,
+                                             wx.ID_CANCEL)
+                dialog.ProcessEvent(clickEvent)
+            return _clickAfter
+
+        wx.MessageDialog.ShowModal = click_after_show(wx.MessageDialog.ShowModal)
+
+        self.assertRaises(FatalError, self.window.initialize)
+        self.assertTrue(self._dialog_showed)
 
 if __name__ == '__main__':
     unittest.main()
