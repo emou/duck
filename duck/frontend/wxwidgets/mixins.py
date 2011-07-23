@@ -14,7 +14,8 @@
 import wx
 
 class ListCtrlAutoRelativeWidthMixin:
-    """ A mix-in class that automatically resizes the columns so that they keep
+    """ A mix-in class that automatically fits columns in a ListCtrl.
+        Uses wx.LIST_AUTOSIZE internally. Then just expands the columns keeping
         their relative sizes.
 
         NOTE:    This only works for report-style lists.

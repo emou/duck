@@ -957,7 +957,7 @@
                                     <property name="hgap">0</property>
                                     <property name="minimum_size"></property>
                                     <property name="name">library_sizer</property>
-                                    <property name="non_flexible_grow_mode">wxFLEX_GROWMODE_SPECIFIED</property>
+                                    <property name="non_flexible_grow_mode">wxFLEX_GROWMODE_ALL</property>
                                     <property name="permission">none</property>
                                     <property name="rows">2</property>
                                     <property name="vgap">0</property>

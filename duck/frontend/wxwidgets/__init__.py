@@ -15,7 +15,7 @@ status_logger = loggers.status
 
 class ChangesEvent(wx.PyEvent):
     """
-    An event representing an MPD status change.
+    An event representing a status change.
     """
 
     CHANGES_EVT_ID = wx.NewId()

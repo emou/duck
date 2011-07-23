@@ -56,8 +56,7 @@ class Backend(BaseBackend):
             msg = [
                 'Could not connect to MPD Server at %(host)s:%(port)s.' % self.options,
                 'Returned error was: %s.' % e,
-                'Is the mpd server running?',
-                'Check your host port settings and make sure the MPD server is running.',
+                'Check your host and port settings and make sure the MPD server is running.',
                 'Press OK if you want to try again or Cancel to exit.',
             ]
             raise BackendInitializeError('\n'.join(msg))

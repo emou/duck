@@ -98,7 +98,7 @@ class MainWindow ( wx.Frame ):
 		library_sizer.AddGrowableRow( 0 )
 		library_sizer.AddGrowableRow( 1 )
 		library_sizer.SetFlexibleDirection( wx.BOTH )
-		library_sizer.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+		library_sizer.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_ALL )
 		
 		self.artist_list = ArtistListCtrl( self.library_page, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_NO_HEADER|wx.LC_REPORT )
 		library_sizer.Add( self.artist_list, 1, wx.ALL|wx.EXPAND, 5 )
