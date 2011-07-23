@@ -76,8 +76,8 @@ class DuckWindow(MainWindow):
             except BackendInitializeError, e:
                 dlg = wx.MessageDialog(
                     None,
-                    'An error occured while initializing the backend:\n%s' % e,
-                    'Backend error'
+                    str(e),
+                    'Error while initializing backend'
                 )
                 choice = dlg.ShowModal()
                 if choice != wx.ID_OK:
