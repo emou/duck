@@ -1,8 +1,8 @@
 import wx
 
-from duck.frontend.wxwidgets.nicelist import NiceListCtrl
+from duck.frontend.wxwidgets.nicelist import NiceSingleColumnListCtrl
 
-class PlaylistCtrl(NiceListCtrl):
+class PlaylistCtrl(NiceSingleColumnListCtrl):
 
     def initialize(self, main_window):
        self.main_window = main_window

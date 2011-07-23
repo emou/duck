@@ -1,7 +1,7 @@
 import wx
 import duck.frontend.wxwidgets
 
-from duck.frontend.wxwidgets.nicelist import NiceListCtrl
+from duck.frontend.wxwidgets.nicelist import NiceSingleColumnListCtrl
 
 class ArtistContextMenu(wx.Menu):
     ADD_ID = 1
@@ -27,7 +27,7 @@ class ArtistContextMenu(wx.Menu):
             return
         wx.PostEvent(self.main_window, duck.frontend.wxwidgets.ChangesEvent(['playlist']))
 
-class ArtistListCtrl(NiceListCtrl):
+class ArtistListCtrl(NiceSingleColumnListCtrl):
 
     def initialize(self, main_window):
         self.main_window = main_window
@@ -37,12 +37,7 @@ class ArtistListCtrl(NiceListCtrl):
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.on_list_item_right_click)
 
     def refresh(self):
-        self.DeleteAllItems()
-        for row, a in enumerate(sorted(self.main_window.backend.list('artist'))):
-            item = wx.ListItem()
-            item.SetId(row + 1)
-            item.SetText(a)
-            self.InsertItem(item)
+        self.load(sorted(self.main_window.backend.list('artist')))
 
     def on_list_item_right_click(self, event):
         menu = ArtistContextMenu(artist = event.Item.GetText(),

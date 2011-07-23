@@ -1,8 +1,8 @@
 import wx
 
-from duck.frontend.wxwidgets.nicelist import NiceListCtrl
+from duck.frontend.wxwidgets.nicelist import NiceSingleColumnListCtrl
 
-class AlbumListCtrl(NiceListCtrl):
+class AlbumListCtrl(NiceSingleColumnListCtrl):
 
     def initialize(self, main_window):
         self.main_window = main_window
@@ -13,14 +13,6 @@ class AlbumListCtrl(NiceListCtrl):
 
     def refresh(self):
         pass
-
-    def load(self, values):
-        self.DeleteAllItems()
-        for row, a in enumerate(values):
-                item = wx.ListItem()
-                item.SetId(row + 1)
-                item.SetText(a)
-                self.InsertItem(item)
 
     def item_right_click(self, event):
         pass
