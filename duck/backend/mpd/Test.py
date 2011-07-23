@@ -53,7 +53,7 @@ class MPDClientMock(object):
     
     def __del__(self):
         self._file.close()
-        self._file.read()
+        self._file_read.close()
 
 mpd.MPDClient = MPDClientMock
 
