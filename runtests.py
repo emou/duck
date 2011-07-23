@@ -27,7 +27,7 @@ class TestsExecutor(object):
         for (root, dirs, files) in os.walk(os.getcwd()):
             for f in files:
                 if f.endswith(_TEST_SUFFIX):
-                    logger.info('Running test %s' % f)
+                    logger.info('Running test %s' % os.path.join(root, f))
                     ret = subprocess.call([sys.executable, '-tt', os.path.join(root, f)])
                     if ret != 0:
                         logger.info('\n====== TESTS FAILED. ======')
