@@ -47,12 +47,6 @@ class PlaylistCtrl(NiceSingleColumnListCtrl):
         self.SetItemState(new_pos, wx.LIST_STATE_FOCUSED, wx.LIST_STATE_FOCUSED)
         self.EnsureVisible(new_pos)
 
-    def add_artist(self, artist):
-        """
-        Adds all songs of the artist.
-        """
-        pass
-
     def on_list_item_right_click(self, event):
         pass
 

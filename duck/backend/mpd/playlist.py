@@ -9,6 +9,6 @@ class Playlist(object):
         self.songs = map(Song, playlist_data)
 
     def __iter__(self):
-        return self
+        return iter(self.songs)
 
 

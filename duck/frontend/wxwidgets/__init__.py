@@ -51,9 +51,6 @@ class DuckWindow(MainWindow):
         self.backend = kwargs.pop('backend')
         MainWindow.__init__(self, *args, **kwargs)
 
-        for c in [self.playlist, self.artist_list, self.album_list, self.song_list]:
-            c.initialize(self)
-
         self.progress_timer = wx.Timer(self, wx.ID_ANY)
         self.state = None
         self.current_song = None
@@ -67,6 +64,9 @@ class DuckWindow(MainWindow):
     def initialize(self):
         self.progress_slider.SetValue(0)
         self.notebook.ChangeSelection(0)
+
+        for c in [self.playlist, self.artist_list, self.album_list, self.song_list]:
+            c.initialize(self)
 
         initialized = False
         while not initialized:
