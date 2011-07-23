@@ -107,6 +107,7 @@ class TestCase(unittest.TestCase):
         self.backend.idle()
         with self.backend:
             pass
+        self.assertEqual(self.backend.last_changes(), ['playlist'])
 
 if __name__ == '__main__':
     unittest.main()
