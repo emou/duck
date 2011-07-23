@@ -1,5 +1,7 @@
 == Duck
 
+NOTICE: This program is not very usable at the moment.
+
 A simple musical player for Linux systems. Currently supports an MPD backend
 and wxWidgets frontend only. The future plan is to support different backends
 and frontends.
