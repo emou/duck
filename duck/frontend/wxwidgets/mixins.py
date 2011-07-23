@@ -30,7 +30,6 @@ class ListCtrlAutoRelativeWidthMixin:
         """ Standard initialiser.
         """
         self.Bind(wx.EVT_SIZE, self._onResize)
-        self.Bind(wx.EVT_LIST_COL_END_DRAG, self._onResize, self)
         self.Bind(wx.EVT_LIST_DELETE_ALL_ITEMS, self._onResize)
         self._doResize()
 

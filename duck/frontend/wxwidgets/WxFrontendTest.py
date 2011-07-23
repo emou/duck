@@ -24,6 +24,7 @@ class PlaylistMock(object):
             self.songs = [
                 SongMock(pos=0, artist='Morphine', title='Sharks', time=300),
                 SongMock(pos=1, artist='Pearl Jam', title='I am alive', time=200),
+                SongMock(pos=2, artist='3 Doors Down', title='I\'m a looser', time=400),
             ]
         else:
             self.songs = songs
@@ -125,7 +126,8 @@ class DuckWindowTestCase(unittest.TestCase):
 
         # Assert current song is visible. A bit of a bogus test as we have a
         # low number of songs, but still...
-        self.assertTrue(playlist.GetViewRect().InsideRect(playlist.GetItemRect(song_pos)))
+        self.assertTrue(playlist.GetViewRect().InsideRect(
+            playlist.GetItemRect(song_pos)))
     
     def test_initialize_error(self):
         def err():
