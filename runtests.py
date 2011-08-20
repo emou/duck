@@ -6,7 +6,6 @@ import logging
 import os
 import subprocess
 import sys
-import unittest
 
 _TEST_SUFFIX='Test.py'
 _LOGGER_NAME='test'

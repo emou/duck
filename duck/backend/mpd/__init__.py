@@ -1,16 +1,13 @@
+from duck.errors import BackendInitializeError
 try:
-    from mpd import MPDClient, MPDError, PendingCommandError, ConnectionError
+    from mpd import MPDClient, MPDError
 except ImportError:
     raise BackendInitializeError('Python mpd client library could not be found. '
                                  'Is python-mpd installed?')
 import select
 import socket
-import time
 
-import duck.backend
 from duck.backend import BaseBackend
-from duck.errors import BackendInitializeError, BackendError
-from duck.utils import Calculations
 from duck.backend.mpd.idle import IdleThread
 from duck.backend.mpd.playlist import Playlist
 from duck.backend.mpd.song import Song

@@ -1,9 +1,6 @@
 import mpd
-import os
 import threading
 import unittest
-
-import duck
 
 _TMP_FILE='test_file'
 

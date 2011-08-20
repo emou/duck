@@ -25,8 +25,6 @@ class PlaylistCtrl(NiceSingleColumnListCtrl):
 
         self.DeleteAllItems()
 
-        current_song = self.main_window.backend.current_song
-
         for row, song in enumerate(self.main_window.backend.playlist.songs):
             item = wx.ListItem()
             item.SetData(long(song.id))

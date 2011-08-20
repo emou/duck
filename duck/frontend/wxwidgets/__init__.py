@@ -1,12 +1,10 @@
+from duck.errors import FrontendInitializeError, BackendInitializeError, FatalError
 try:
     import wx
 except ImportError:
     raise FrontendInitializeError('Could not import wx. Is wxpython installed?')
 
-from threading import Thread
-
 from duck.frontend import BaseFrontend
-from duck.errors import FrontendInitializeError, BackendInitializeError, FatalError
 from duck.log import loggers
 from gui.noname import MainWindow
 
@@ -94,7 +92,7 @@ class DuckWindow(MainWindow):
         self.update_status(skip_updates, changes)
 
     def refresh(self, event):
-        with self.backend as b:
+        with self.backend:
             changes = event.get_changes()
             self.handle_changes(changes)
 
