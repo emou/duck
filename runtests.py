@@ -2,6 +2,7 @@
 A simple test runner which looks for tests in all subdirectories and
 executes them.
 """
+import argparse
 import logging
 import os
 import subprocess
@@ -14,6 +15,9 @@ _DEFAULT_LOGGING_HANDLER=logging.StreamHandler(sys.stdout)
 
 class TestsExecutor(object):
 
+    def __init__(self, args):
+        self.args = args
+
     def run(self):
         logger = logging.getLogger(_LOGGER_NAME)
         logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -23,15 +27,27 @@ class TestsExecutor(object):
             logger.warning('Warning: PYTHONPATH will be replaced with the root'
                            ' directory of the project.')
         os.environ['PYTHONPATH'] = os.path.dirname(os.path.abspath(__file__))
-        for (root, dirs, files) in os.walk(os.getcwd()):
-            for f in files:
-                if f.endswith(_TEST_SUFFIX):
-                    logger.info('Running test %s' % os.path.join(root, f))
-                    ret = subprocess.call([sys.executable, '-tt', os.path.join(root, f)])
-                    if ret != 0:
-                        logger.info('\n====== TESTS FAILED. ======')
-                        return ret
+
+        if self.args.tests:
+            tests = self.args.tests
+        else:
+            tests = []
+            for (root, dirs, files) in os.walk(os.getcwd()):
+                for f in files:
+                    if f.endswith(_TEST_SUFFIX):
+                        tests.append(os.path.join(root, f))
+
+        for f in tests:
+                logger.info('Running test %s' % f)
+                ret = subprocess.call([sys.executable, '-tt', f])
+                if ret != 0:
+                    logger.info('\n====== TESTS FAILED. ======')
+                    return ret
         return 0
 
 if __name__ == '__main__':
-    sys.exit(TestsExecutor().run())
+    parser = argparse.ArgumentParser(description='Run the Duck tests.')
+    parser.add_argument('tests', metavar='T', type=str, nargs='*',
+                        help='Run only the specified tests')
+    args = parser.parse_args()
+    sys.exit(TestsExecutor(args).run())
