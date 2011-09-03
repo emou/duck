@@ -1,4 +1,6 @@
-# Ideas from wxPython.lib.mixins.listctrl :
+# XXX: Not sure if I should mention this here, but parts in this module are a
+# rework of wxPython.lib.mixins.listctrl
+# TODO: Learn about licenses and if this is needed:
 #----------------------------------------------------------------------------
 # Name:        wxPython.lib.mixins.listctrl
 # Purpose:     Helpful mix-in classes for wxListCtrl
@@ -12,6 +14,38 @@
 #----------------------------------------------------------------------------
 
 import wx
+
+class SearchForm(wx.TextCtrl):
+    pass
+
+class ListCtrlIncrementalSearchMixin:
+
+    def __init__(self):
+        self.search_form = SearchForm(self)
+        self.Bind(wx.EVT_CHAR, self.incremental_search)
+        self.search_term = ''
+        self.insert_mode = False
+
+    def incremental_search(self, evt):
+        self.search_form.Show()
+        key_code = evt.GetKeyCode()
+        try:
+            char =  chr(key_code)
+        except ValueError:
+            # XXX: Switch to logging.
+            print 'WARNING: Ignoring unimplemented key code %s' % evt.GetKeyCode()
+            return
+
+        # TODO: handle escape and/or change of focus
+        if char == '/':
+            self.insert_mode = True
+        elif char.isalnum():
+            self.search_term += char
+        
+        self._search()
+    
+    def _search(self):
+        pass
 
 class ListCtrlAutoRelativeWidthMixin:
     """ A mix-in class that automatically fits columns in a ListCtrl.
@@ -27,7 +61,7 @@ class ListCtrlAutoRelativeWidthMixin:
         This mix-in class was written by Emil Stanchev <stanchev.emil@gmail.com>
     """
     def __init__(self):
-        """ Standard initialiser.
+        """ Standard initializer.
         """
         self.Bind(wx.EVT_SIZE, self._onResize)
         self.Bind(wx.EVT_LIST_DELETE_ALL_ITEMS, self._onResize)

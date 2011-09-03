@@ -36,6 +36,13 @@ class BackendInitializeError(BackendError):
     pass
 
 @next_errcode
+class BackendConnectionError(BackendError):
+    """
+    An error while connecting to the backend.
+    """
+    pass
+
+@next_errcode
 class FrontendError(FatalError):
     """
     A base error in the frontend.

@@ -1,6 +1,6 @@
-from duck.errors import BackendInitializeError
+from duck.errors import BackendInitializeError, BackendConnectionError
 try:
-    from mpd import MPDClient, MPDError
+    import mpd
 except ImportError:
     raise BackendInitializeError('Python mpd client library could not be found. '
                                  'Is python-mpd installed?')
@@ -46,10 +46,10 @@ class Backend(BaseBackend):
         self.idle_thread.start()
 
     def _connect(self):
-        self.client = MPDClient()
+        self.client = mpd.MPDClient()
         try:
             self.client.connect(self.options['host'], self.options['port'])
-        except (MPDError, socket.error) as e:
+        except (mpd.MPDError, socket.error) as e:
             msg = [
                 'Could not connect to MPD Server at %(host)s:%(port)s.' % self.options,
                 '%s.' % e,
@@ -58,7 +58,10 @@ class Backend(BaseBackend):
             raise BackendInitializeError('\n'.join(msg))
 
     def __enter__(self):
-        self._changes = self._noidle()
+        try:
+            self._changes = self._noidle()
+        except mpd.MPDConnectionError, e:
+            raise BackendConnectionError("MPDConnection error: %s" % e)
         return self
 
     def __exit__(self, *args):
@@ -201,11 +204,11 @@ class Backend(BaseBackend):
     def disconnect(self):
         try:
             self.client.close()
-        except (MPDError, socket.error):
+        except (mpd.MPDError, socket.error):
             pass
         try:
             self.client.disconnect()
-        except (MPDError, IOError):
-            # This guy is corrupted. Use a new one.
-            self.client = MPDClient()
+        except (mpd.MPDError, IOError):
+            # This one is corrupted. Use a new one.
+            self.client = mpd.MPDClient()
 
