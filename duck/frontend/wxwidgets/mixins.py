@@ -76,7 +76,6 @@ class ListCtrlIncrementalSearchMixin(object):
             )
         self.Bind(wx.EVT_CHAR, self.incremental_search)
         self.search_field = SearchField(self)
-        # VIRTUAL?
         self.data = data
         self.filtered_items = None
         self.all_items = []
@@ -88,8 +87,6 @@ class ListCtrlIncrementalSearchMixin(object):
                 self.InsertItem(item)
                 for col, val in enumerate(d):
                     self.SetStringItem(row, col, val)
-        # VIRTUAL
-        # self.SetItemCount(len(self.data))
 
     def incremental_search(self, evt):
         key_code = evt.GetKeyCode()
