@@ -125,27 +125,6 @@ class ListCtrlIncrementalSearchMixin(object):
             item.SetId(row)
             self.InsertItem(item)
 
-        #for (i, x) in enumerate(self.data):
-        #    for col in self.search_columns:
-        #        if search_term.lower() in x[col].lower():
-        #            self.filtered.append(i)
-
-        # VIRTUAL
-        # self.SetItemCount(len(self.filtered))
-
-    # VIRTUAL
-    #def OnGetItemText(self, item, col):
-    #    if self.filtered:
-    #        return self.filtered[item][col]
-    #    else:
-    #        return self.data[item][col]
-
-    #def OnGetItemImage(self, item):
-    #    return -1
-
-    #def OnGetItemAttr(self, item):
-    #    raise NotImplementedError()
-
 
 class ListCtrlAutoRelativeWidthMixin:
     """ A mix-in class that automatically fits columns in a ListCtrl.
