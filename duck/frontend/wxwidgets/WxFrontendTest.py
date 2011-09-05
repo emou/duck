@@ -124,11 +124,6 @@ class DuckWindowTestCase(unittest.TestCase):
         self.assertEqual(playlist.GetItemState(song_pos, wx.LIST_STATE_FOCUSED),
                          wx.LIST_STATE_FOCUSED)
 
-        # Assert current song is visible. A bit of a bogus test as we have a
-        # low number of songs, but still...
-        self.assertTrue(playlist.GetViewRect().InsideRect(
-            playlist.GetItemRect(song_pos)))
-    
     def test_initialize_error(self):
         def err():
             raise BackendInitializeError()
