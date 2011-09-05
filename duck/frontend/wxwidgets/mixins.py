@@ -24,6 +24,11 @@ class SearchField(wx.TextCtrl):
     
     def incremental_search(self, evt):
         key_code = evt.GetKeyCode()
+        if key_code == wx.WXK_ESCAPE:
+            # Escape key. Cancel
+            self.Hide()
+            self.lst.incremental_search_stop()
+            return
         try:
             char = chr(key_code)
         except ValueError:
@@ -78,7 +83,7 @@ class ListCtrlIncrementalSearchMixin(object):
         self.search_field = SearchField(self)
         self.data = data
         self.filtered_items = None
-        self.all_items = []
+        self.all_items = None
 
         if self.data:
             for row, d in enumerate(self.data):
@@ -102,6 +107,14 @@ class ListCtrlIncrementalSearchMixin(object):
             self.search_field.Show()
         else:
             evt.Skip()
+    
+    def incremental_search_stop(self):
+        """
+        Cancel the search load back all of the items.
+        """
+        self.load_items(self.all_items)
+        self.filtered_items = None
+        self.all_items = None
  
     def filter_items(self, search_term):
         """
@@ -117,10 +130,16 @@ class ListCtrlIncrementalSearchMixin(object):
                 self.all_items.append(item)
                 if search_term.lower() in item.GetText().lower():
                     self.filtered_items.append(item)
+        self.load_items(self.filtered_items)
+    
+    def load_items(self, items):
         self.DeleteAllItems()
-        for row, item in enumerate(self.filtered_items):
-            item.SetId(row)
-            self.InsertItem(item)
+        if items is not None:
+            for row, item in enumerate(items):
+                item.SetId(row)
+                self.InsertItem(item)
+        else:
+            print 'WARNING: load_items: items is None.'
 
 
 class ListCtrlAutoRelativeWidthMixin:
