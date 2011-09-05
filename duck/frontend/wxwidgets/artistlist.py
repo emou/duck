@@ -24,7 +24,7 @@ class ArtistContextMenu(wx.Menu):
             with self.main_window.backend:
                 self.main_window.backend.replace_artist(self.artist)
         else:
-            return
+            event.Skip()
         wx.PostEvent(self.main_window, duck.frontend.wxwidgets.ChangesEvent(['playlist']))
 
 class ArtistListCtrl(NiceSingleColumnListCtrl):

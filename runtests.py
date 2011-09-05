@@ -50,8 +50,9 @@ class TestsExecutor(object):
             )
 
         for f in tests:
-            logger.info('Running %s' % f)
-            p = subprocess.Popen([sys.executable, '-tt', f],
+            args = [sys.executable, '-tt', f]
+            logger.info('PYTHONPATH=%s %s' % (os.environ['PYTHONPATH'], ' '.join(args)))
+            p = subprocess.Popen(args,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
             (out, err) = p.communicate()
