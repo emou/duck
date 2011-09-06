@@ -18,11 +18,18 @@ class NiceListSearchableCtrl(ListCtrlIncrementalSearchMixin, wx.ListCtrl, ListCt
             args[4] |= wx.LC_VIRTUAL | wx.LC_REPORT
         else:
             kwargs['style'] = kwargs.get('style', 0) | wx.LC_VIRTUAL | wx.LC_REPORT
+        search_field = kwargs.pop('search_field')
         search_columns = kwargs.pop('search_columns')
         columns = kwargs.pop('columns')
         wx.ListCtrl.__init__(self, *args, **kwargs)
         ListCtrlAutoRelativeWidthMixin.__init__(self)
-        ListCtrlIncrementalSearchMixin.__init__(self, columns=columns, search_columns=search_columns)
+        ListCtrlIncrementalSearchMixin.__init__(
+            self,
+            search_field=search_field, 
+            columns=columns,
+            search_columns=search_columns
+        )
+
 
 class NiceSingleColumnListCtrl(NiceListCtrl):
 

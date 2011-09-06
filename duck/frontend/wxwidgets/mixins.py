@@ -15,46 +15,14 @@
 
 import wx
 
-class SearchField(wx.TextCtrl):
-    def __init__(self, parent):
-        wx.TextCtrl.__init__(self, parent)
-        self.Bind(wx.EVT_CHAR, self.on_char)
-        self.Bind(wx.EVT_TEXT, self.on_text)
-        self.search_term = ''
-        self.lst = parent
-    
-    def on_char(self, evt):
-        key_code = evt.GetKeyCode()
-        if key_code == wx.WXK_ESCAPE:
-            # Escape key. Cancel
-            self.Hide()
-            self.lst.incremental_search_stop()
-            return
-        try:
-            char = chr(key_code)
-        except ValueError:
-            # XXX: Switch to logging.
-            print 'WARNING: Ignoring unimplemented key code %s' % evt.GetKeyCode()
-            evt.Skip()
-            return
-        self.search_term += char
-        # Strip whitespace
-        self.search_term = self.search_term.strip()
-        if self.search_term:
-            self.lst.filter_items(self.search_term)
-        evt.Skip()
-    
-    def on_text(self, evt):
-        self.search_term = evt.GetString()
-        self.lst.filter_items(self.search_term)
-        evt.Skip()
-
-
 class ListCtrlIncrementalSearchMixin(object):
 
-    def __init__(self, columns, search_columns, data=None):
+    def __init__(self, search_field, columns, search_columns, data=None):
         """
         Initializes a new ListCtrlIncrementalSearchMixin.
+        `search_field` is a SearchField instance to which we should attach.
+        Letting users pass this as a parameter lets them create it however they want.
+
         `data` is a list of tuples. Each element of the list is a row. An
         element of each tuple corresponds a the column, i.e. something like:
         [(cell00, cell01), (cell10, cell11), ...]
@@ -93,13 +61,13 @@ class ListCtrlIncrementalSearchMixin(object):
             )
         for i, col in enumerate(columns):
             self.InsertColumn(i, col[0]) #, col[1])
-        # XXX: Move up as a main window / parent event?
-        self.Bind(wx.EVT_CHAR, self.on_char)
-        self.search_field = SearchField(self)
+        self.search_field = search_field
+        self.search_field.Bind(wx.EVT_TEXT, self.on_text_in_field)
+        self.search_term = ''
         self.filtered = None
         self.attrs = {}
         self.load_data(data)
-    
+
     def load_data(self, data):
         self.data = data
         if self.data is not None:
@@ -107,8 +75,32 @@ class ListCtrlIncrementalSearchMixin(object):
         else:
             self.SetItemCount(0)
 
-    def on_char(self, evt):
-        self.search_field.ProcessEvent(evt)
+    def on_char_in_field(self, evt):
+        key_code = evt.GetKeyCode()
+        if key_code == wx.WXK_ESCAPE:
+            # Escape key. Cancel
+            self.search_field.Hide()
+            self.incremental_search_stop()
+            return
+        try:
+            char = chr(key_code)
+        except ValueError:
+            # XXX: Switch to logging.
+            print 'WARNING: Ignoring unimplemented key code %s' % evt.GetKeyCode()
+            evt.Skip()
+            return
+
+        self.search_term += char
+        # Strip whitespace
+        self.search_term = self.search_term.strip()
+        if self.search_term:
+            self.filter_items(self.search_term)
+        evt.Skip()
+
+    def on_text_in_field(self, evt):
+        self.search_term = evt.GetString()
+        self.filter_items(self.search_term)
+        evt.Skip()
 
     def incremental_search_stop(self):
         """
@@ -116,7 +108,7 @@ class ListCtrlIncrementalSearchMixin(object):
         """
         self.filtered = None
         self.SetItemCount(len(self.data))
- 
+    
     def filter_items(self, search_term):
         """
         Filters the items in the list, searching for `search_term`
@@ -124,13 +116,8 @@ class ListCtrlIncrementalSearchMixin(object):
         """
         if not search_term:
             self.incremental_search_stop()
-        if self.filtered is not None:
-            search_range = list(self.filtered)
-        else:
-            search_range = range(len(self.data))
         self.filtered = []
-        for i in search_range:
-            columns = self.data[i]
+        for i, columns in enumerate(self.data):
             for c in self.search_columns:
                 if search_term.lower() in columns[c].lower():
                     self.filtered.append(i)
@@ -152,6 +139,11 @@ class ListCtrlIncrementalSearchMixin(object):
             item = self.get_reverse_position(item)
         return super(ListCtrlIncrementalSearchMixin, self).SetItemState(item, st, st_mask)
 
+    def EnsureVisible(self, item, absolute=True):
+        if absolute:
+            item = self.get_reverse_position(item)
+        super(ListCtrlIncrementalSearchMixin, self).EnsureVisible(item)
+
     def GetItemFont(self, item, absolute=True):
         if absolute:
             item = self.get_reverse_position(item)
@@ -171,8 +163,8 @@ class ListCtrlIncrementalSearchMixin(object):
         return -1
 
     def OnGetItemAttr(self, item):
-        return self.attrs.get(item)
-    
+        return self.attrs.get(self.get_real_position(item))
+
     def get_real_position(self, pos):
         if self.filtered is None:
             return pos
@@ -182,7 +174,6 @@ class ListCtrlIncrementalSearchMixin(object):
         if self.filtered is None:
             return pos
         return self.filtered.index(pos)
-
 
 class ListCtrlAutoRelativeWidthMixin:
     """ A mix-in class that automatically fits columns in a ListCtrl.

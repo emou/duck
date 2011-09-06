@@ -13,6 +13,7 @@ class MyAutoCompleteCtrl(ListCtrlIncrementalSearchMixin, wx.ListCtrl):
         columns = kwargs.pop('columns', (('Name',      None),))
         wx.ListCtrl.__init__(self, *args, **kwargs)
         ListCtrlIncrementalSearchMixin.__init__(self,
+                                                search_field=wx.TextCtrl(self),
                                                 columns=columns,
                                                 search_columns=search_columns,
                                                 data=self.DATA)
@@ -29,6 +30,7 @@ class IncrementalSearchMixinInitializeTest(unittest.TestCase):
                     wx.ListCtrl.__init__(self, *args, **kwargs)
                     ListCtrlIncrementalSearchMixin.__init__(
                         self,
+                        search_field=wx.TextCtrl(self),
                         search_columns=[0],
                         columns=(('Name', None),)
                     )
@@ -61,7 +63,7 @@ class IncrementalSearchTest(unittest.TestCase):
         self.auto_completer.search_field.ProcessEvent(char_event)
 
         self.assertEquals('a',
-                          self.auto_completer.search_field.search_term)
+                          self.auto_completer.search_term)
         # Only Alice matches the search term 'a'.
         self.assertEquals(len(self.auto_completer.data),
                           len(MyAutoCompleteCtrl.DATA))
