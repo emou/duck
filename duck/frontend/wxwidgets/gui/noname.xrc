@@ -16,7 +16,7 @@
 						<vgap>0</vgap>
 						<hgap>0</hgap>
 						<growablecols>0</growablecols>
-						<growablerows>2</growablerows>
+						<growablerows>3</growablerows>
 						<object class="sizeritem">
 							<option>1</option>
 							<flag>wxEXPAND</flag>
@@ -126,6 +126,15 @@
 								<value>50</value>
 								<min>0</min>
 								<max>100</max>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxEXPAND</flag>
+							<border>5</border>
+							<object class="wxTextCtrl" name="playlist_search">
+								<value></value>
+								<maxlength>0</maxlength>
 							</object>
 						</object>
 						<object class="sizeritem">

@@ -60,6 +60,7 @@ class DuckWindow(MainWindow):
         self.volume_slider.Bind(wx.EVT_SLIDER, self.do_volume_set)
 
     def initialize(self):
+        self.playlist.set_search_field(self.playlist_search)
         self.progress_slider.SetValue(0)
         self.notebook.ChangeSelection(0)
 

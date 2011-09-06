@@ -60,13 +60,17 @@ class ListCtrlIncrementalSearchMixin(object):
                 'indexes of columns that we should search for'
             )
         for i, col in enumerate(columns):
-            self.InsertColumn(i, col[0]) #, col[1])
-        self.search_field = search_field
-        self.search_field.Bind(wx.EVT_TEXT, self.on_text_in_field)
+            self.InsertColumn(i, col[0], col[1])
+        if search_field is not None:
+            self.set_search_field(search_field)
         self.search_term = ''
         self.filtered = None
         self.attrs = {}
         self.load_data(data)
+
+    def set_search_field(self, search_field):
+        self.search_field = search_field
+        self.search_field.Bind(wx.EVT_TEXT, self.on_text_in_field)
 
     def load_data(self, data):
         self.data = data

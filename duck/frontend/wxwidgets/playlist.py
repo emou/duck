@@ -10,7 +10,6 @@ class PlaylistCtrl(NiceListSearchableCtrl):
                              ('Title',     200),
                              ('Duration',  100))
         kwargs['search_columns'] = [1, 2]
-        kwargs['search_field'] = wx.TextCtrl(args[0])
         NiceListSearchableCtrl.__init__(self, 
                                         *args, **kwargs)
         # The wx.App object must be created first for this to work!

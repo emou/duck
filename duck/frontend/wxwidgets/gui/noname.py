@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Apr 10 2011)
+## Python code generated with wxFormBuilder (version Sep  6 2011)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -40,7 +40,7 @@ class MainWindow ( wx.Frame ):
 		self.now_playing_page = wx.Panel( self.notebook, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		now_playing_sizer = wx.FlexGridSizer( 3, 1, 0, 0 )
 		now_playing_sizer.AddGrowableCol( 0 )
-		now_playing_sizer.AddGrowableRow( 2 )
+		now_playing_sizer.AddGrowableRow( 3 )
 		now_playing_sizer.SetFlexibleDirection( wx.BOTH )
 		now_playing_sizer.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_ALL )
 		
@@ -83,6 +83,9 @@ class MainWindow ( wx.Frame ):
 		
 		self.progress_slider = wx.Slider( self.now_playing_page, wx.ID_ANY, 50, 0, 100, wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
 		now_playing_sizer.Add( self.progress_slider, 0, wx.BOTTOM|wx.EXPAND, 5 )
+		
+		self.playlist_search = wx.TextCtrl( self.now_playing_page, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
+		now_playing_sizer.Add( self.playlist_search, 0, wx.EXPAND, 5 )
 		
 		self.playlist = PlaylistCtrl( self.now_playing_page, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_REPORT )
 		now_playing_sizer.Add( self.playlist, 1, wx.EXPAND, 5 )
