@@ -110,14 +110,14 @@ class DuckWindowTestCase(unittest.TestCase):
         playlist = self.window.playlist
         song_pos = self.backend.current_song.pos
 
-        self.assertEqual(playlist.GetItem(0, 1).GetText(),
+        self.assertEqual(playlist.GetItemText(0, 1),
                          self.backend.playlist.songs[0].artist)
 
         self.assertTrue(self.backend.initialized)
 
         self.assertEqual(self.window.volume_slider.GetValue(),
                          self.backend.volume)
-
+        playlist.GetItemFont(song_pos).GetWeight()
         self.assertEqual(playlist.GetItemFont(song_pos).GetWeight(),
                         wx.BOLD)
 

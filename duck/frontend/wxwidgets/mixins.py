@@ -18,11 +18,13 @@ import wx
 class SearchField(wx.TextCtrl):
     def __init__(self, parent):
         wx.TextCtrl.__init__(self, parent)
-        self.Bind(wx.EVT_CHAR, self.incremental_search)
+        self.Bind(wx.EVT_CHAR, self.on_char)
+        self.Bind(wx.EVT_TEXT, self.on_text)
         self.search_term = ''
         self.lst = parent
     
-    def incremental_search(self, evt):
+    def on_char(self, evt):
+        print 'Incremental...'
         key_code = evt.GetKeyCode()
         if key_code == wx.WXK_ESCAPE:
             # Escape key. Cancel
@@ -34,19 +36,24 @@ class SearchField(wx.TextCtrl):
         except ValueError:
             # XXX: Switch to logging.
             print 'WARNING: Ignoring unimplemented key code %s' % evt.GetKeyCode()
+            evt.Skip()
             return
-        char = char.strip()
-        if char:
-            # Don't append whitespace.
-            self.search_term += char
+        self.search_term += char
+        # Strip whitespace
+        self.search_term = self.search_term.strip()
         if self.search_term:
             self.lst.filter_items(self.search_term)
+        evt.Skip()
+    
+    def on_text(self, evt):
+        self.search_term = evt.GetString()
+        self.lst.filter_items(self.search_term)
+        evt.Skip()
 
-app = wx.App(False)
 
 class ListCtrlIncrementalSearchMixin(object):
 
-    def __init__(self, search_columns, data=None):
+    def __init__(self, columns, search_columns, data=None):
         """
         Initializes a new ListIncrementalSearchMixin.
         `data` is a list of tuples. Each element of the list is a row. An
@@ -56,15 +63,19 @@ class ListCtrlIncrementalSearchMixin(object):
         `search_columns` is a list of values convertable to int, representing
         the indexes of the columns which we should search.
 
+        NOTE: The OnGetItem* methods that are to be defined for virutal lists
+        will be replaced in the derived class.
+
         """
-        if self.GetColumnCount() == 0:
+        # The only way I was able to find to actually guarantee that these
+        # methods will be looked up from our mixin.
+        self.__class__.OnGetItemText = ListCtrlIncrementalSearchMixin.OnGetItemText
+        self.__class__.OnGetItemImage = ListCtrlIncrementalSearchMixin.OnGetItemImage
+        self.__class__.OnGetItemAttr = ListCtrlIncrementalSearchMixin.OnGetItemAttr
+
+        if not self.HasFlag(wx.LC_VIRTUAL):
             raise ValueError(
-                'ListCtrlIncrementalSearchMixin expects you to '
-                'create your columns before calling __init__.'
-            )
-        if self.IsVirtual():
-            raise ValueError(
-                'ListCtrlIncrementalSearchMixin works on non-virtual '
+                'ListCtrlIncrementalSearchMixin works on virtual '
                 'lists only (set wx.LC_VIRTUAL style)'
             )
         if not self.HasFlag(wx.LC_REPORT):
@@ -79,67 +90,100 @@ class ListCtrlIncrementalSearchMixin(object):
                 'search_columns should be a list of zero-based '
                 'indexes of columns that we should search for'
             )
-        self.Bind(wx.EVT_CHAR, self.incremental_search)
+        for i, col in enumerate(columns):
+            self.InsertColumn(i, col[0]) #, col[1])
+        # XXX: Move up as a main window / parent event?
+        self.Bind(wx.EVT_CHAR, self.on_char)
         self.search_field = SearchField(self)
-        self.data = data
-        self.filtered_items = None
-        self.all_items = None
-
-        if self.data:
-            for row, d in enumerate(self.data):
-                item = wx.ListItem()
-                item.SetId(row)
-                self.InsertItem(item)
-                for col, val in enumerate(d):
-                    self.SetStringItem(row, col, val)
-
-    def incremental_search(self, evt):
-        key_code = evt.GetKeyCode()
-        try:
-            char =  chr(key_code)
-        except ValueError:
-            # XXX: Switch to logging.
-            print 'WARNING: Ignoring unimplemented key code %s' % evt.GetKeyCode()
-            return
-
-        # TODO: handle escape and/or change of focus
-        if char == '/':
-            self.search_field.Show()
-        else:
-            evt.Skip()
+        self.filtered = None
+        self.attrs = {}
+        self.load_data(data)
     
+    def load_data(self, data):
+        self.data = data
+        if self.data is not None:
+            self.SetItemCount(len(self.data))
+        else:
+            self.SetItemCount(0)
+
+    def on_char(self, evt):
+        self.search_field.ProcessEvent(evt)
+
     def incremental_search_stop(self):
         """
         Cancel the search load back all of the items.
         """
-        self.load_items(self.all_items)
-        self.filtered_items = None
-        self.all_items = None
+        self.filtered = None
+        self.SetItemCount(len(self.data))
  
     def filter_items(self, search_term):
         """
         Filters the items in the list, searching for `search_term`
         in columns with indexes in `search_colmns`.
         """
-        self.filtered_items = []
-        self.all_items = []
-
-        for c in self.search_columns:
-            for i in range(self.GetItemCount()):
-                item = self.GetItem(i, c)
-                self.all_items.append(item)
-                if search_term.lower() in item.GetText().lower():
-                    self.filtered_items.append(item)
-        self.load_items(self.filtered_items)
-    
-    def load_items(self, items):
-        self.DeleteAllItems()
-        if items is not None:
-            for row, item in enumerate(items):
-                item.SetId(row)
-                self.InsertItem(item)
+        if not search_term:
+            self.filtered = self.incremental_search_stop()
+        if self.filtered is not None:
+            search_range = list(self.filtered)
         else:
-            print 'WARNING: load_items: items is None.'
+            search_range = range(len(self.data))
+        self.filtered = []
+        for i in search_range:
+            columns = self.data[i]
+            for c in self.search_columns:
+                if search_term.lower() in columns[c].lower():
+                    self.filtered.append(i)
+                    break
+        self.SetItemCount(len(self.filtered))
+
+    def _get_item(self, item):
+        if self.filtered is not None:
+            return self.data[self.filtered[item]]
+        return self.data[item]
+    
+    def SetItemFont(self, item, font, absolute=True):
+        """
+        The `absolute` argument defines whether the item's index
+        is absolute and should be converted to fit in the filtered.
+        """
+        if absolute:
+            item = self.get_reverse_position(item)
+        itemAttr = self.attrs.setdefault(item, wx.ListItemAttr())
+        itemAttr.SetFont(font)
+        self.Refresh()
+    
+    def GetItemFont(self, item, absolute=True):
+        if absolute:
+            item = self.get_reverse_position(item)
+        ret = self.attrs.get(item, wx.Font())
+        return ret
+
+    def GetItemText(self, item, col):
+        return self._get_item(item)[col]
+ 
+    # Virtual list callbacks
+    def OnGetItemText(self, item, col):
+        return self._get_item(item)[col]
+
+    def OnGetItemImage(self, item):
+        return -1
+
+    def OnGetItemAttr(self, item):
+        return self.attrs.get(item)
+    
+    def get_real_position(self, pos):
+        if self.filtered is None:
+            return pos
+        return self.filtered[pos]
+    
+    def get_reverse_position(self, pos):
+        if self.filtered is None:
+            return pos
+        try:
+            return self.filtered.index(pos - 1)
+        except:
+            print self.filtered
+            raise
 
 
 class ListCtrlAutoRelativeWidthMixin:

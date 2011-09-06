@@ -97,6 +97,14 @@ class DuckWindow(MainWindow):
             self.handle_changes(changes)
 
     @command
+    def do_change_song(self, songid):
+        """
+        Tell the backend to change to song with `songid` in the current
+        playlist.
+        """
+        self.backend.playid(songid)
+
+    @command
     def do_filter_artist(self, event):
         selected_artist = event.GetItem().GetText()
         self.album_list.load(sorted(self.backend.list(
@@ -135,10 +143,6 @@ class DuckWindow(MainWindow):
     def do_next(self, event):
         logger.debug('do_next')
         self.backend.next()
-
-    @command
-    def do_change_song(self, event):
-        self.backend.playid(event.GetItem().GetData())
 
     @command
     def do_seek(self, event):
