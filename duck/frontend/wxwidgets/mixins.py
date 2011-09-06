@@ -60,7 +60,10 @@ class ListCtrlIncrementalSearchMixin(object):
                 'indexes of columns that we should search for'
             )
         for i, col in enumerate(columns):
-            self.InsertColumn(i, col[0], col[1])
+            if col[1] is not None:
+                self.InsertColumn(i, col[0], col[1])
+            else:
+                self.InsertColumn(i, col[0])
         if search_field is not None:
             self.set_search_field(search_field)
         self.search_term = ''
@@ -71,6 +74,7 @@ class ListCtrlIncrementalSearchMixin(object):
     def set_search_field(self, search_field):
         self.search_field = search_field
         self.search_field.Bind(wx.EVT_TEXT, self.on_text_in_field)
+        self.search_field.Bind(wx.EVT_CHAR, self.on_char_in_field)
 
     def load_data(self, data):
         self.data = data
@@ -83,23 +87,10 @@ class ListCtrlIncrementalSearchMixin(object):
         key_code = evt.GetKeyCode()
         if key_code == wx.WXK_ESCAPE:
             # Escape key. Cancel
-            self.search_field.Hide()
             self.incremental_search_stop()
             return
-        try:
-            char = chr(key_code)
-        except ValueError:
-            # XXX: Switch to logging.
-            print 'WARNING: Ignoring unimplemented key code %s' % evt.GetKeyCode()
+        else:
             evt.Skip()
-            return
-
-        self.search_term += char
-        # Strip whitespace
-        self.search_term = self.search_term.strip()
-        if self.search_term:
-            self.filter_items(self.search_term)
-        evt.Skip()
 
     def on_text_in_field(self, evt):
         self.search_term = evt.GetString()
@@ -110,6 +101,7 @@ class ListCtrlIncrementalSearchMixin(object):
         """
         Cancel the search load back all of the items.
         """
+        self.search_field.ChangeValue('')
         self.filtered = None
         self.SetItemCount(len(self.data))
     
@@ -126,6 +118,12 @@ class ListCtrlIncrementalSearchMixin(object):
                 if search_term.lower() in columns[c].lower():
                     self.filtered.append(i)
                     break
+        # Clear selected items
+        for i in self.get_selected_items():
+            self.SetItemState(i, 0, wx.LIST_STATE_SELECTED, convert=False)
+        # Set focus to and select the first item
+        self.SetItemState(0, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED, convert=False)
+        self.SetItemState(0, wx.LIST_STATE_FOCUSED, wx.LIST_STATE_FOCUSED, convert=False)
         self.SetItemCount(len(self.filtered))
 
     def _get_item(self, item):
@@ -138,18 +136,18 @@ class ListCtrlIncrementalSearchMixin(object):
         itemAttr.SetFont(font)
         self.Refresh()
     
-    def SetItemState(self, item, st, st_mask, absolute=True):
-        if absolute:
+    def SetItemState(self, item, st, st_mask, convert=True):
+        if convert:
             item = self.get_reverse_position(item)
         return super(ListCtrlIncrementalSearchMixin, self).SetItemState(item, st, st_mask)
 
-    def EnsureVisible(self, item, absolute=True):
-        if absolute:
+    def EnsureVisible(self, item, convert=True):
+        if convert:
             item = self.get_reverse_position(item)
         super(ListCtrlIncrementalSearchMixin, self).EnsureVisible(item)
 
-    def GetItemFont(self, item, absolute=True):
-        if absolute:
+    def GetItemFont(self, item, convert=True):
+        if convert:
             item = self.get_reverse_position(item)
         itemAttr = self.attrs.get(item, None)
         if itemAttr is not None:
@@ -173,11 +171,27 @@ class ListCtrlIncrementalSearchMixin(object):
         if self.filtered is None:
             return pos
         return self.filtered[pos]
-    
+
     def get_reverse_position(self, pos):
         if self.filtered is None:
             return pos
         return self.filtered.index(pos)
+
+    def get_selected_items(self):
+        """
+        Returns the indexes of all selected items in the control.
+        """
+        indexes = []
+        lastFound = -1
+        while True:
+            index = self.GetNextItem(lastFound, wx.LIST_NEXT_ALL, wx.LIST_STATE_SELECTED)
+            if index == -1:
+                break
+            else:
+                lastFound = index
+                indexes.append(index)
+        return indexes
+
 
 class ListCtrlAutoRelativeWidthMixin:
     """ A mix-in class that automatically fits columns in a ListCtrl.

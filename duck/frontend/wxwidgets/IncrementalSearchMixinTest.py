@@ -58,8 +58,8 @@ class IncrementalSearchTest(unittest.TestCase):
         self.assertEquals(self.auto_completer.GetItemCount(),
                           len(MyAutoCompleteCtrl.DATA))
 
-        char_event = wx.KeyEvent(wx.wxEVT_CHAR)
-        char_event.m_keyCode = ord('a')
+        char_event = wx.CommandEvent(wx.wxEVT_COMMAND_TEXT_UPDATED)
+        char_event.SetString('a')
         self.auto_completer.search_field.ProcessEvent(char_event)
 
         self.assertEquals('a',
