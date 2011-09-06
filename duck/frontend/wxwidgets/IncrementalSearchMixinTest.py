@@ -3,7 +3,7 @@ import wx
 
 from duck.frontend.wxwidgets.mixins import ListCtrlIncrementalSearchMixin
 
-class MyAutoCompleteCtrl(wx.ListCtrl, ListCtrlIncrementalSearchMixin):
+class MyAutoCompleteCtrl(ListCtrlIncrementalSearchMixin, wx.ListCtrl):
     DEFAULT_SEARCH_COLUMNS = [0]
     DATA=[('Alice',), ('Bob',), ('Ben',), ('Chuck',)]
 
@@ -56,13 +56,6 @@ class IncrementalSearchTest(unittest.TestCase):
         self.assertEquals(self.auto_completer.GetItemCount(),
                           len(MyAutoCompleteCtrl.DATA))
 
-        # Pressing '/' enters incremental search mode.
-        char_event_begin = wx.KeyEvent(wx.wxEVT_CHAR)
-        char_event_begin.m_keyCode = ord('/')
-        self.auto_completer.ProcessEvent(char_event_begin)
-
-        self.assertEquals(self.auto_completer.GetItemCount(),
-                          len(MyAutoCompleteCtrl.DATA))
         char_event = wx.KeyEvent(wx.wxEVT_CHAR)
         char_event.m_keyCode = ord('a')
         self.auto_completer.search_field.ProcessEvent(char_event)
@@ -78,8 +71,16 @@ class IncrementalSearchTest(unittest.TestCase):
             'Alice',
             self.auto_completer.data[self.auto_completer.filtered[0]][0]
         )
+        self.assertEquals(
+            'Alice',
+            self.auto_completer.GetItemText(0,0),
+        )
+        # "Assert not raises"
+        self.auto_completer.GetItemFont(0)
+        # Cant get item font of 'Bob' because it's filtered out right now.
+        self.assertRaises(ValueError, self.auto_completer.GetItemFont, 1)
 
-        # Press ESC to cancel search.
+        # ESC cancels search.
         char_event_end = wx.KeyEvent(wx.wxEVT_CHAR)
         char_event_end.m_keyCode = wx.WXK_ESCAPE
         self.auto_completer.search_field.ProcessEvent(char_event_end)

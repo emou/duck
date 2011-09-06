@@ -24,7 +24,6 @@ class SearchField(wx.TextCtrl):
         self.lst = parent
     
     def on_char(self, evt):
-        print 'Incremental...'
         key_code = evt.GetKeyCode()
         if key_code == wx.WXK_ESCAPE:
             # Escape key. Cancel
@@ -55,7 +54,7 @@ class ListCtrlIncrementalSearchMixin(object):
 
     def __init__(self, columns, search_columns, data=None):
         """
-        Initializes a new ListIncrementalSearchMixin.
+        Initializes a new ListCtrlIncrementalSearchMixin.
         `data` is a list of tuples. Each element of the list is a row. An
         element of each tuple corresponds a the column, i.e. something like:
         [(cell00, cell01), (cell10, cell11), ...]
@@ -67,6 +66,8 @@ class ListCtrlIncrementalSearchMixin(object):
         will be replaced in the derived class.
 
         """
+        self.NORMAL_FONT = wx.Font(10, wx.FONTFAMILY_DEFAULT,
+                                   wx.FONTSTYLE_NORMAL, wx.NORMAL)
         # The only way I was able to find to actually guarantee that these
         # methods will be looked up from our mixin.
         self.__class__.OnGetItemText = ListCtrlIncrementalSearchMixin.OnGetItemText
@@ -122,7 +123,7 @@ class ListCtrlIncrementalSearchMixin(object):
         in columns with indexes in `search_colmns`.
         """
         if not search_term:
-            self.filtered = self.incremental_search_stop()
+            self.incremental_search_stop()
         if self.filtered is not None:
             search_range = list(self.filtered)
         else:
@@ -141,22 +142,23 @@ class ListCtrlIncrementalSearchMixin(object):
             return self.data[self.filtered[item]]
         return self.data[item]
     
-    def SetItemFont(self, item, font, absolute=True):
-        """
-        The `absolute` argument defines whether the item's index
-        is absolute and should be converted to fit in the filtered.
-        """
-        if absolute:
-            item = self.get_reverse_position(item)
+    def SetItemFont(self, item, font):
         itemAttr = self.attrs.setdefault(item, wx.ListItemAttr())
         itemAttr.SetFont(font)
         self.Refresh()
     
+    def SetItemState(self, item, st, st_mask, absolute=True):
+        if absolute:
+            item = self.get_reverse_position(item)
+        return super(ListCtrlIncrementalSearchMixin, self).SetItemState(item, st, st_mask)
+
     def GetItemFont(self, item, absolute=True):
         if absolute:
             item = self.get_reverse_position(item)
-        ret = self.attrs.get(item, wx.Font())
-        return ret
+        itemAttr = self.attrs.get(item, None)
+        if itemAttr is not None:
+            return itemAttr.GetFont()
+        return self.NORMAL_FONT
 
     def GetItemText(self, item, col):
         return self._get_item(item)[col]
@@ -179,11 +181,7 @@ class ListCtrlIncrementalSearchMixin(object):
     def get_reverse_position(self, pos):
         if self.filtered is None:
             return pos
-        try:
-            return self.filtered.index(pos - 1)
-        except:
-            print self.filtered
-            raise
+        return self.filtered.index(pos)
 
 
 class ListCtrlAutoRelativeWidthMixin:
