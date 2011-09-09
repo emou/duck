@@ -1,18 +1,3 @@
-# XXX: Not sure if I should mention this here, but parts in this module are a
-# rework of wxPython.lib.mixins.listctrl
-# TODO: Learn about licenses and if this is needed:
-#----------------------------------------------------------------------------
-# Name:        wxPython.lib.mixins.listctrl
-# Purpose:     Helpful mix-in classes for wxListCtrl
-#
-# Author:      Robin Dunn
-#
-# Created:     15-May-2001
-# RCS-ID:      $Id: listctrl.py 63322 2010-01-30 00:59:55Z RD $
-# Copyright:   (c) 2001 by Total Control Software
-# Licence:     wxWindows license
-#----------------------------------------------------------------------------
-
 import wx
 
 class ListCtrlIncrementalSearchMixin(object):
@@ -193,7 +178,7 @@ class ListCtrlIncrementalSearchMixin(object):
         return indexes
 
 
-class ListCtrlAutoRelativeWidthMixin:
+class ListCtrlAutoRelativeWidthMixin(object):
     """ A mix-in class that automatically fits columns in a ListCtrl.
         Uses wx.LIST_AUTOSIZE internally. Then just expands the columns keeping
         their relative sizes.
@@ -206,6 +191,19 @@ class ListCtrlAutoRelativeWidthMixin:
 
         This mix-in class was written by Emil Stanchev <stanchev.emil@gmail.com>
     """
+    # Author of the original code, which I modified:
+    #----------------------------------------------------------------------------
+    # Name:        wxPython.lib.mixins.listctrl
+    # Purpose:     Helpful mix-in classes for wxListCtrl
+    #
+    # Author:      Robin Dunn
+    #
+    # Created:     15-May-2001
+    # RCS-ID:      $Id: listctrl.py 63322 2010-01-30 00:59:55Z RD $
+    # Copyright:   (c) 2001 by Total Control Software
+    # Licence:     wxWindows license
+    #----------------------------------------------------------------------------
+
     def __init__(self):
         """ Standard initializer.
         """
