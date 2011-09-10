@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!python
 import sys
 from os.path import dirname, abspath
 
