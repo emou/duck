@@ -9,8 +9,8 @@
 
 from duck.frontend.wxwidgets.playlist import PlaylistCtrl
 from duck.frontend.wxwidgets.artistlist import ArtistListCtrl
-from duck.frontend.wxwidgets.songlist import SongListCtrl
 from duck.frontend.wxwidgets.albumlist import AlbumListCtrl
+from duck.frontend.wxwidgets.songlist import SongListCtrl
 import wx
 
 ###########################################################################
@@ -95,6 +95,11 @@ class MainWindow ( wx.Frame ):
 		now_playing_sizer.Fit( self.now_playing_page )
 		self.notebook.AddPage( self.now_playing_page, u"Now playing", False )
 		self.library_page = wx.Panel( self.notebook, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		bSizer9 = wx.BoxSizer( wx.VERTICAL )
+		
+		self.library_search_field = wx.TextCtrl( self.library_page, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer9.Add( self.library_search_field, 0, wx.ALL|wx.EXPAND, 5 )
+		
 		library_sizer = wx.FlexGridSizer( 2, 2, 0, 0 )
 		library_sizer.AddGrowableCol( 0 )
 		library_sizer.AddGrowableCol( 1 )
@@ -104,17 +109,19 @@ class MainWindow ( wx.Frame ):
 		library_sizer.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_ALL )
 		
 		self.artist_list = ArtistListCtrl( self.library_page, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_NO_HEADER|wx.LC_REPORT )
-		library_sizer.Add( self.artist_list, 1, wx.ALL|wx.EXPAND, 5 )
-		
-		self.song_list = SongListCtrl( self.library_page, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_ICON|wx.LC_NO_HEADER|wx.LC_REPORT )
-		library_sizer.Add( self.song_list, 0, wx.ALL|wx.EXPAND, 5 )
+		library_sizer.Add( self.artist_list, 1, wx.EXPAND, 5 )
 		
 		self.album_list = AlbumListCtrl( self.library_page, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_ICON|wx.LC_NO_HEADER|wx.LC_REPORT )
-		library_sizer.Add( self.album_list, 1, wx.ALL|wx.EXPAND, 5 )
+		library_sizer.Add( self.album_list, 1, wx.EXPAND, 5 )
 		
-		self.library_page.SetSizer( library_sizer )
+		self.song_list = SongListCtrl( self.library_page, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_ICON|wx.LC_NO_HEADER|wx.LC_REPORT )
+		library_sizer.Add( self.song_list, 0, wx.EXPAND, 5 )
+		
+		bSizer9.Add( library_sizer, 1, wx.EXPAND, 5 )
+		
+		self.library_page.SetSizer( bSizer9 )
 		self.library_page.Layout()
-		library_sizer.Fit( self.library_page )
+		bSizer9.Fit( self.library_page )
 		self.notebook.AddPage( self.library_page, u"Library", True )
 		self.devices_page = wx.Panel( self.notebook, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.notebook.AddPage( self.devices_page, u"External devices", False )

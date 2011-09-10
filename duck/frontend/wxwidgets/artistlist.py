@@ -1,7 +1,7 @@
 import wx
 import duck.frontend.wxwidgets
 
-from duck.frontend.wxwidgets.nicelist import NiceSingleColumnListCtrl
+from duck.frontend.wxwidgets.nicelist import NiceListSearchableCtrl
 
 class ArtistContextMenu(wx.Menu):
     ADD_ID = 1
@@ -23,25 +23,37 @@ class ArtistContextMenu(wx.Menu):
         elif eid==self.REPLACE_ID:
             with self.main_window.backend:
                 self.main_window.backend.replace_artist(self.artist)
+                self.main_window.backend.play(0)
         else:
             event.Skip()
         wx.PostEvent(self.main_window, duck.frontend.wxwidgets.ChangesEvent(['playlist']))
 
-class ArtistListCtrl(NiceSingleColumnListCtrl):
+class ArtistListCtrl(NiceListSearchableCtrl):
+    def __init__(self, *args, **kwargs):
+        kwargs['columns'] = (('Artist', None),)
+        kwargs['search_columns'] = [0]
+        NiceListSearchableCtrl.__init__(self, *args, **kwargs)
 
-    def initialize(self, main_window):
+    def initialize(self, main_window, *args, **kwargs):
         self.main_window = main_window
-        self.InsertColumn(0, 'Artist')
-        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.main_window.do_filter_artist)
-        self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.main_window.do_add_artist)
+        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.do_filter_artist)
+        self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.do_add_artist)
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.on_list_item_right_click)
 
     def refresh(self):
-        self.load(sorted(self.main_window.backend.list('artist')))
+        self.load_data(map(
+            lambda x: (x,),
+            sorted(self.main_window.backend.list('artist'))
+        ))
 
     def on_list_item_right_click(self, event):
-        menu = ArtistContextMenu(artist = event.Item.GetText(),
+        selected_artist = self.GetItemText(self.get_selected_items()[0])
+        menu = ArtistContextMenu(artist = selected_artist,
                                  main_window = self.main_window)
         self.main_window.PopupMenu(menu)
 
+    def do_filter_artist(self, event):
+        return self.main_window.do_filter_artist(event)
 
+    def do_add_artist(self, event):
+        return self.main_window.do_add_artist(event)

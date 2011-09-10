@@ -100,7 +100,7 @@ class ListCtrlIncrementalSearchMixin(object):
         self.filtered = []
         for i, columns in enumerate(self.data):
             for c in self.search_columns:
-                if search_term.lower() in columns[c].lower():
+                if search_term.lower() in unicode(columns[c].lower(), encoding='utf-8'):
                     self.filtered.append(i)
                     break
         # Clear selected items
@@ -139,7 +139,7 @@ class ListCtrlIncrementalSearchMixin(object):
             return itemAttr.GetFont()
         return self.NORMAL_FONT
 
-    def GetItemText(self, item, col):
+    def GetItemText(self, item, col=0):
         return self._get_item(item)[col]
  
     # Virtual list callbacks
