@@ -84,7 +84,7 @@ class MainWindow ( wx.Frame ):
 		self.progress_slider = wx.Slider( self.now_playing_page, wx.ID_ANY, 50, 0, 100, wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
 		now_playing_sizer.Add( self.progress_slider, 0, wx.BOTTOM|wx.EXPAND, 5 )
 		
-		self.playlist_search = wx.TextCtrl( self.now_playing_page, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
+		self.playlist_search = wx.TextCtrl( self.now_playing_page, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( -1,-1 ), wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB )
 		now_playing_sizer.Add( self.playlist_search, 0, wx.EXPAND, 5 )
 		
 		self.playlist = PlaylistCtrl( self.now_playing_page, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_REPORT )
@@ -97,7 +97,7 @@ class MainWindow ( wx.Frame ):
 		self.library_page = wx.Panel( self.notebook, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		bSizer9 = wx.BoxSizer( wx.VERTICAL )
 		
-		self.library_search_field = wx.TextCtrl( self.library_page, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.library_search_field = wx.TextCtrl( self.library_page, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB )
 		bSizer9.Add( self.library_search_field, 0, wx.ALL|wx.EXPAND, 5 )
 		
 		library_sizer = wx.FlexGridSizer( 2, 2, 0, 0 )

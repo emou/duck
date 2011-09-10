@@ -48,4 +48,5 @@ class PlaylistCtrl(NiceListSearchableCtrl):
     def on_list_item_right_click(self, event):
         pass
 
-
+    def on_text_enter_in_field(self, event):
+        self.main_window.do_change_song(self.get_real_position(0))

@@ -1,6 +1,7 @@
 import wx
 
 class ListCtrlIncrementalSearchMixin(object):
+    SEARCH_KEY = ord('/')
 
     def __init__(self, search_field, columns, search_columns, data=None):
         """
@@ -51,6 +52,7 @@ class ListCtrlIncrementalSearchMixin(object):
                 self.InsertColumn(i, col[0])
         if search_field is not None:
             self.set_search_field(search_field)
+        self.Bind(wx.EVT_CHAR, self.on_char)
         self.search_term = ''
         self.filtered = None
         self.attrs = {}
@@ -60,6 +62,7 @@ class ListCtrlIncrementalSearchMixin(object):
         self.search_field = search_field
         self.search_field.Bind(wx.EVT_TEXT, self.on_text_in_field)
         self.search_field.Bind(wx.EVT_CHAR, self.on_char_in_field)
+        self.search_field.Bind(wx.EVT_TEXT_ENTER, self.on_text_enter_in_field)
 
     def load_data(self, data):
         self.data = data
@@ -73,14 +76,24 @@ class ListCtrlIncrementalSearchMixin(object):
         if key_code == wx.WXK_ESCAPE:
             # Escape key. Cancel
             self.incremental_search_stop()
-            return
         else:
             evt.Skip()
+    
+    def on_char(self, evt):
+        key_code = evt.GetKeyCode()
+        if key_code == self.SEARCH_KEY:
+            self.search_field.SetFocus()
 
     def on_text_in_field(self, evt):
         self.search_term = evt.GetString()
         self.filter_items(self.search_term)
         evt.Skip()
+    
+    def on_text_enter_in_field(self, evt):
+        """
+        Implement in subclass.
+        """
+        pass
 
     def incremental_search_stop(self):
         """

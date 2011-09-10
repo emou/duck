@@ -212,7 +212,7 @@ class DuckWindow(MainWindow):
             self.SetTitle('%s - %s' % (new_song.artist, new_song.title))
             self.status_bar.SetStatusText('%s - %s' % (new_song.artist, new_song.title))
             if _NOTIFY:
-                self.notification.update('duck: song change', '%s - %s' % (new_song.artist, new_song.title))
+                self.notification.update('Now Playing', '%s - %s' % (new_song.artist, new_song.title))
                 self.notification.show()
 
         playlist_changes = self.backend.playlist_changes()
