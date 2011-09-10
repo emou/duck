@@ -2,8 +2,8 @@ from duck.errors import BackendInitializeError, BackendConnectionError
 try:
     import mpd
 except ImportError:
-    raise BackendInitializeError('Python mpd client library could not be found. '
-                                 'Is python-mpd installed?')
+    raise BackendInitializeError('could not import mpd: '
+                                 'make sure python-mpd is installed')
 import select
 import socket
 
