@@ -2,7 +2,7 @@ from duck.errors import FrontendInitializeError, BackendInitializeError, FatalEr
 try:
     import wx
 except ImportError:
-    raise FrontendInitializeError('Could not import wx. Is wxpython installed?')
+    raise FrontendInitializeError('could not import wx: make sure wxpython is installed')
 
 from duck.frontend import BaseFrontend
 from duck.log import loggers
