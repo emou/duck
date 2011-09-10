@@ -91,7 +91,7 @@ class Backend(BaseBackend):
             return self.client.play()
 
     def playid(self, song_id):
-        return self.client.playid(song_id)
+        return self.client.play(song_id)
 
     def pause(self):
         return self.client.pause()
