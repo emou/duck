@@ -3,6 +3,14 @@ try:
     import wx
 except ImportError:
     raise FrontendInitializeError('could not import wx: make sure wxpython is installed')
+try:
+    import pynotify
+except ImportError:
+    _NOTIFY = False
+else:
+    _NOTIFY = True
+    pynotify.init("duck-player")
+
 
 from duck.frontend import BaseFrontend
 from duck.log import loggers
@@ -64,6 +72,10 @@ class DuckWindow(MainWindow):
         self.artist_list.set_search_field(self.library_search_field)
         self.progress_slider.SetValue(0)
         self.notebook.ChangeSelection(0)
+        if _NOTIFY:
+            self.notification = pynotify.Notification('duck music player')
+        else:
+            self.notification = None
 
         for c in [self.playlist, self.artist_list, self.album_list, self.song_list]:
             c.initialize(self)
@@ -199,6 +211,9 @@ class DuckWindow(MainWindow):
             self.current_song = new_song
             self.SetTitle('%s - %s' % (new_song.artist, new_song.title))
             self.status_bar.SetStatusText('%s - %s' % (new_song.artist, new_song.title))
+            if _NOTIFY:
+                self.notification.update('%s - %s' % (new_song.artist, new_song.title))
+                self.notification.show()
 
         playlist_changes = self.backend.playlist_changes()
         if playlist_changes:

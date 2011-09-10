@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+from os.path import abspath, dirname
 
 def main(argv):
    sys.path.append(dirname(abspath(__file__)))
