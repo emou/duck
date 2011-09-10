@@ -206,13 +206,13 @@ class DuckWindow(MainWindow):
         status_logger.debug('[update]')
         new_song = self.backend.current_song
 
-        if self.current_song is None or self.current_song.pos != new_song.pos:
+        if self.current_song is None or self.current_song.id != new_song.id:
             self.playlist.change_song(self.current_song, new_song)
             self.current_song = new_song
             self.SetTitle('%s - %s' % (new_song.artist, new_song.title))
             self.status_bar.SetStatusText('%s - %s' % (new_song.artist, new_song.title))
             if _NOTIFY:
-                self.notification.update('%s - %s' % (new_song.artist, new_song.title))
+                self.notification.update('duck: song change', '%s - %s' % (new_song.artist, new_song.title))
                 self.notification.show()
 
         playlist_changes = self.backend.playlist_changes()

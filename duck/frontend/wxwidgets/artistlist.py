@@ -26,7 +26,8 @@ class ArtistContextMenu(wx.Menu):
                 self.main_window.backend.play(0)
         else:
             event.Skip()
-        wx.PostEvent(self.main_window, duck.frontend.wxwidgets.ChangesEvent(['playlist']))
+        wx.PostEvent(self.main_window,
+                     duck.frontend.wxwidgets.ChangesEvent(['playlist']))
 
 class ArtistListCtrl(NiceListSearchableCtrl):
     def __init__(self, *args, **kwargs):
@@ -47,7 +48,7 @@ class ArtistListCtrl(NiceListSearchableCtrl):
         ))
 
     def on_list_item_right_click(self, event):
-        selected_artist = self.GetItemText(self.get_selected_items()[0])
+        selected_artist = self._get_artist_from_event(event)
         menu = ArtistContextMenu(artist = selected_artist,
                                  main_window = self.main_window)
         self.main_window.PopupMenu(menu)
@@ -56,4 +57,13 @@ class ArtistListCtrl(NiceListSearchableCtrl):
         return self.main_window.do_filter_artist(event)
 
     def do_add_artist(self, event):
-        return self.main_window.do_add_artist(event)
+        with self.main_window.backend:
+            self.main_window.backend.replace_artist(
+                self._get_artist_from_event(event)
+            )
+            self.main_window.backend.play(0)
+        wx.PostEvent(self.main_window,
+                     duck.frontend.wxwidgets.ChangesEvent(['playlist']))
+ 
+    def _get_artist_from_event(self, event):
+        return self.GetItemText(self.get_selected_items()[0])
