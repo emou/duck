@@ -52,6 +52,8 @@ class ListCtrlIncrementalSearchMixin(object):
                 self.InsertColumn(i, col[0])
         if search_field is not None:
             self.set_search_field(search_field)
+        else:
+            self.search_field = None
         self.Bind(wx.EVT_CHAR, self.on_char)
         self.search_term = ''
         self.filtered = None
@@ -70,6 +72,8 @@ class ListCtrlIncrementalSearchMixin(object):
             self.SetItemCount(len(self.data))
         else:
             self.SetItemCount(0)
+        if self.search_term:
+            self.filter_items(self.search_term)
 
     def on_char_in_field(self, evt):
         key_code = evt.GetKeyCode()
@@ -78,7 +82,7 @@ class ListCtrlIncrementalSearchMixin(object):
             self.incremental_search_stop()
         else:
             evt.Skip()
-    
+
     def on_char(self, evt):
         key_code = evt.GetKeyCode()
         if key_code == self.SEARCH_KEY:

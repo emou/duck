@@ -119,8 +119,7 @@ class DuckWindow(MainWindow):
         self.backend.playid(songid)
 
     @command
-    def do_filter_artist(self, event):
-        selected_artist = event.GetItem().GetText()
+    def do_filter_artist(self, selected_artist):
         self.album_list.load(sorted(self.backend.list(
             'album', 'artist', selected_artist)))
         self.song_list.load(sorted(self.backend.list(

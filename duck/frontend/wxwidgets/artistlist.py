@@ -57,7 +57,8 @@ class ArtistListCtrl(NiceListSearchableCtrl):
         self.do_replace_artist(event)
 
     def do_filter_artist(self, event):
-        return self.main_window.do_filter_artist(event)
+        selected_artist = event.m_itemIndex
+        return self.main_window.do_filter_artist(self.GetItemText(selected_artist))
 
     def do_replace_artist(self, event):
         with self.main_window.backend:
