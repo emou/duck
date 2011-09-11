@@ -15,8 +15,8 @@ class MyAutoCompleteCtrl(ListCtrlIncrementalSearchMixin, wx.ListCtrl):
         ListCtrlIncrementalSearchMixin.__init__(self,
                                                 search_field=wx.TextCtrl(self),
                                                 columns=columns,
-                                                search_columns=search_columns,
-                                                data=self.DATA)
+                                                search_columns=search_columns)
+        self.load_data(self.DATA)
 
 class IncrementalSearchMixinInitializeTest(unittest.TestCase):
         def setUp(self):

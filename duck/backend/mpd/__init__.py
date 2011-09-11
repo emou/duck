@@ -7,7 +7,7 @@ except ImportError:
 import select
 import socket
 
-from duck.backend import BaseBackend
+from duck.backend import BaseBackend, stored_value
 from duck.backend.mpd.idle import IdleThread
 from duck.backend.mpd.playlist import Playlist
 from duck.backend.mpd.song import Song
@@ -70,26 +70,26 @@ class Backend(BaseBackend):
     def last_changes(self):
         return self._changes
 
-    def end_command(self):
-        self.idle()
-
     def add_artist(self, artist):
         for f in self.client.list('file', 'artist', artist):
             self.client.add(f)
 
-    def remove_song(self, song_id):
-        self.client.delete(song_id)
-
     def replace_artist(self, artist):
         self.clear()
-        self.add_artist(artist)
+        return self.add_artist(artist)
+
+    def remove_song(self, song_pos):
+        return self.client.delete(song_pos)
+
+    def remove_song_by_id(self, song_id):
+        return self.client.deleteid(song_id)
 
     def add_album(self, album):
         pass
 
-    def play(self, song_id=None):
-        if song_id:
-            return self.client.play(song_id)
+    def play(self, song_pos=None):
+        if song_pos:
+            return self.client.play(song_pos)
         else:
             return self.client.play()
 
@@ -109,7 +109,7 @@ class Backend(BaseBackend):
         return self.client.previous()
 
     def seek(self, value):
-        return self.client.seekid(self.current_song.id, value)
+        return self.client.seekid(self.current_song().id, value)
 
     def setvol(self, value):
         return self.client.setvol(value)
@@ -159,12 +159,12 @@ class Backend(BaseBackend):
 
     # }} Methods dealing with idle mode
 
-    @property
+    @stored_value
     def current_song(self):
         song_dict = self.client.currentsong()
         if song_dict:
             logger.debug(song_dict)
-            return Song(song_dict)
+        return Song(song_dict)
 
     def get_status(self):
         self._last_status = self.status
@@ -179,6 +179,11 @@ class Backend(BaseBackend):
             # self.client.plchangesposid(self._last_status['playlist'])
             return []
         return []
+
+    def playlist_version(self, sync=False):
+        if sync:
+           self.get_status()
+        return int(self.status['playlist'])
 
     @property
     def playlist(self):

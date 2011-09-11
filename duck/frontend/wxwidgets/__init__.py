@@ -189,7 +189,7 @@ class DuckWindow(MainWindow):
 
     def update(self, skip_updates=None):
         status_logger.debug('[update]')
-        new_song = self.backend.current_song
+        new_song = self.backend.current_song(sync=True)
 
         if self.current_song is None or self.current_song.id != new_song.id:
             self.playlist.change_song(self.current_song, new_song)

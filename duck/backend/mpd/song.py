@@ -6,10 +6,15 @@ class Song(object):
     A class representing a song in the MPD database.
     """
 
+    class DoesNotExist(Exception):
+        pass
+
     __slots__ = ('id', 'album', 'artist', 'filepath', 'pos', 'title', 'time')
+    __registry__ = {}
+
 
     def __init__(self, song_dict):
-        self.id = song_dict['id']
+        self.id = int(song_dict['id'])
         self.title = song_dict.get('title',
             os.path.splitext(os.path.split(song_dict.get('file', ''))[1])[0]
         )
@@ -19,4 +24,15 @@ class Song(object):
         self.pos = int(song_dict['pos'])
         self.filepath = song_dict['file']
 
+        self.__registry__[self.id] = self
 
+
+    @classmethod
+    def get(cls, id):
+        """
+        Return a song by id.
+        """
+        try:
+            return cls.__registry__[id]
+        except KeyError:
+            raise cls.DoesNotExist

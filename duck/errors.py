@@ -36,6 +36,14 @@ class BackendInitializeError(BackendError):
     pass
 
 @next_errcode
+class BackendNoStoredValueError(BackendError):
+    """
+    Raised by the backend when there is no stored value that was requested.
+    You probably want to pass sync=True to the method you're trying to call.
+    """
+    pass
+
+@next_errcode
 class BackendConnectionError(BackendError):
     """
     An error while connecting to the backend.

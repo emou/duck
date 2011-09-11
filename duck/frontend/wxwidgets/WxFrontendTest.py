@@ -69,8 +69,7 @@ class BackendMock(BaseBackend):
     def volume(self):
         return 75
  
-    @property
-    def current_song(self):
+    def current_song(self, sync=False):
         return self.playlist.songs[1]
  
     @property
@@ -108,7 +107,7 @@ class DuckWindowTestCase(unittest.TestCase):
         self.window.initialize()
 
         playlist = self.window.playlist
-        song_pos = self.backend.current_song.pos
+        song_pos = self.backend.current_song().pos
 
         self.assertEqual(playlist.GetItemText(0, 1),
                          self.backend.playlist.songs[0].artist)
