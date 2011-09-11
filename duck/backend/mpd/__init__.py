@@ -77,6 +77,9 @@ class Backend(BaseBackend):
         for f in self.client.list('file', 'artist', artist):
             self.client.add(f)
 
+    def remove_song(self, song_id):
+        self.client.delete(song_id)
+
     def replace_artist(self, artist):
         self.clear()
         self.add_artist(artist)

@@ -50,6 +50,12 @@ class BaseBackend(object):
     def previous(self):
         raise NotImplementedError()
 
+    def remove_song(self, songid):
+        """
+        Remove song with `songid` from the playlist.
+        """
+        raise NotImplementedError()
+
     def __enter__(self):
         """
         Called when starting a conversation with the backend. Could be thought

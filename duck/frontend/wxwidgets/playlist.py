@@ -1,5 +1,6 @@
 import wx
 
+import duck.frontend.wxwidgets
 from duck.frontend.wxwidgets.nicelist import NiceListSearchableCtrl
 
 class PlaylistCtrl(NiceListSearchableCtrl):
@@ -21,6 +22,7 @@ class PlaylistCtrl(NiceListSearchableCtrl):
     def initialize(self, main_window):
         self.main_window = main_window
         self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.do_change_song)
+        self.Bind(wx.EVT_CHAR, self.on_char)
 
     def refresh(self):
         data = []
@@ -50,3 +52,13 @@ class PlaylistCtrl(NiceListSearchableCtrl):
 
     def on_text_enter_in_field(self, event):
         self.main_window.do_change_song(self.get_real_position(0))
+
+    def on_char(self, event):
+        key_code = event.GetKeyCode()
+        if key_code == wx.WXK_DELETE:
+            for x in self.get_selected_items():
+                with self.main_window.backend:
+                    self.main_window.backend.remove_song(self.get_real_position(x))
+        wx.PostEvent(self.main_window,
+                     duck.frontend.wxwidgets.ChangesEvent(['playlist']))
+        event.Skip()

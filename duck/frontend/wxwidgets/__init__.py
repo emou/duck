@@ -13,26 +13,12 @@ else:
 
 
 from duck.frontend import BaseFrontend
+from duck.frontend.wxwidgets.events import ChangesEvent
 from duck.log import loggers
 from gui.noname import MainWindow
 
 logger = loggers.main
 status_logger = loggers.status
-
-class ChangesEvent(wx.PyEvent):
-    """
-    An event representing a status change.
-    """
-
-    CHANGES_EVT_ID = wx.NewId()
-
-    def __init__(self, changes):
-        wx.PyEvent.__init__(self)
-        self.SetEventType(self.CHANGES_EVT_ID)
-        self._changes = changes
-
-    def get_changes(self):
-        return self._changes
 
 def command(func):
     def cmd_func(window, *args, **kwargs):
@@ -209,9 +195,14 @@ class DuckWindow(MainWindow):
             self.playlist.change_song(self.current_song, new_song)
             self.current_song = new_song
             self.SetTitle('%s - %s' % (new_song.artist, new_song.title))
-            self.status_bar.SetStatusText('%s - %s' % (new_song.artist, new_song.title))
+            self.status_bar.SetStatusText(
+                '%s - %s' % (new_song.artist, new_song.title)
+            )
             if _NOTIFY:
-                self.notification.update('Now Playing', '%s - %s' % (new_song.artist, new_song.title))
+                self.notification.update(
+                    'Now Playing',
+                    '%s - %s' % (new_song.artist, new_song.title)
+                )
                 self.notification.show()
 
         playlist_changes = self.backend.playlist_changes()
