@@ -187,6 +187,12 @@ class BaseBackend(object):
         """
         pass
 
+    def add_album(self, album):
+        """
+        Add all tracks from a given album to the current playlist.
+        """
+        raise NotImplementedError()
+
     def add_artist(self, artist):
         """
         Add all of an artist's tracks to the current playlist.
