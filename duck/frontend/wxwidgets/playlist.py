@@ -59,6 +59,7 @@ class PlaylistCtrl(NiceListSearchableCtrl):
             for x in self.get_selected_items():
                 with self.main_window.backend:
                     self.main_window.backend.remove_song(self.get_real_position(x))
-        wx.PostEvent(self.main_window,
-                     duck.frontend.wxwidgets.ChangesEvent(['playlist']))
-        event.Skip()
+            wx.PostEvent(self.main_window,
+                         duck.frontend.wxwidgets.events.ChangesEvent(['playlist']))
+        else:
+            event.Skip()

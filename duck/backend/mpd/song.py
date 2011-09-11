@@ -8,16 +8,8 @@ class Song(object):
 
     __slots__ = ('id', 'album', 'artist', 'filepath', 'pos', 'title', 'time')
 
-    _cache = {}
-
-    def __new__(typ, song_dict):
-        _id = song_dict['id']
-        try:
-            return typ._cache[_id]
-        except KeyError:
-            self = object.__new__(typ)
-            self.id = _id
-
+    def __init__(self, song_dict):
+        self.id = song_dict['id']
         self.title = song_dict.get('title',
             os.path.splitext(os.path.split(song_dict.get('file', ''))[1])[0]
         )
@@ -27,6 +19,4 @@ class Song(object):
         self.pos = int(song_dict['pos'])
         self.filepath = song_dict['file']
 
-        typ._cache[self.id] = self
 
-        return self

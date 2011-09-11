@@ -74,6 +74,8 @@ class ListCtrlIncrementalSearchMixin(object):
             self.SetItemCount(0)
         if self.search_term:
             self.filter_items(self.search_term)
+        else:
+            self.filtered=None
 
     def on_char_in_field(self, evt):
         key_code = evt.GetKeyCode()
