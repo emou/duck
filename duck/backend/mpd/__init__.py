@@ -77,12 +77,15 @@ class Backend(BaseBackend):
         for f in self.client.list('file', 'artist', artist):
             self.client.add(f)
 
-    def remove_song(self, song_id):
-        self.client.delete(song_id)
+    def remove_song(self, song_pos):
+        return self.client.delete(song_pos)
+
+    def remove_song_by_id(self, song_id):
+        return self.client.deleteid(song_id)
 
     def replace_artist(self, artist):
         self.clear()
-        self.add_artist(artist)
+        return self.add_artist(artist)
 
     def add_album(self, album):
         pass
@@ -179,6 +182,11 @@ class Backend(BaseBackend):
             # self.client.plchangesposid(self._last_status['playlist'])
             return []
         return []
+
+    def playlist_version(self, sync=False):
+        if sync:
+           self.get_status()
+        return int(self.status['playlist'])
 
     @property
     def playlist(self):

@@ -3,7 +3,7 @@ import wx
 class ListCtrlIncrementalSearchMixin(object):
     SEARCH_KEY = ord('/')
 
-    def __init__(self, search_field, columns, search_columns, data=None):
+    def __init__(self, search_field, columns, search_columns):
         """
         Initializes a new ListCtrlIncrementalSearchMixin.
         `search_field` is a SearchField instance to which we should attach.
@@ -58,7 +58,6 @@ class ListCtrlIncrementalSearchMixin(object):
         self.search_term = ''
         self.filtered = None
         self.attrs = {}
-        self.load_data(data)
 
     def set_search_field(self, search_field):
         self.search_field = search_field

@@ -26,7 +26,8 @@ class PlaylistCtrl(NiceListSearchableCtrl):
 
     def refresh(self):
         data = []
-        for row, song in enumerate(self.main_window.backend.playlist.songs):
+        self.songs = self.main_window.backend.playlist.songs
+        for row, song in enumerate(self.songs):
             data.append((
                 str(song.pos + 1),
                 song.artist,
@@ -56,9 +57,16 @@ class PlaylistCtrl(NiceListSearchableCtrl):
     def on_char(self, event):
         key_code = event.GetKeyCode()
         if key_code == wx.WXK_DELETE:
-            for x in self.get_selected_items():
-                with self.main_window.backend:
-                    self.main_window.backend.remove_song(self.get_real_position(x))
+            with self.main_window.backend:
+                for x in self.get_selected_items():
+                    playlist_version = self.main_window.backend.playlist_version(sync=True)
+                    self.main_window.backend.remove_song_by_id(
+                        self.songs[self.get_real_position(x)].id
+                    )
+                    new_pl_version = self.main_window.backend.playlist_version(sync=True)
+                    if  new_pl_version != playlist_version + 1:
+                        # Somebody changed the playlist
+                        break
             wx.PostEvent(self.main_window,
                          duck.frontend.wxwidgets.events.ChangesEvent(['playlist']))
         else:
