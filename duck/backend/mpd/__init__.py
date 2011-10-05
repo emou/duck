@@ -120,6 +120,9 @@ class Backend(BaseBackend):
     def list(self, *args):
         return self.client.list(*args)
 
+    def rescan_database(self):
+        return self.client.rescan()
+
     # {{ Methods dealing with idle mode
 
     def idle(self):

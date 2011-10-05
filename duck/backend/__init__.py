@@ -9,7 +9,7 @@ class _StoredValueClass(object):
     Use this decorator to transparently implement methods that take a `sync`
     parameter.
 
-    In the body of the method, just calculate the synced value.  The decorator
+    In the body of the method, just calculate the synced value. The decorator
     will take care to implement everything else that's needed to implement the
     behaviour that the BaseBackend interface defines.
     """

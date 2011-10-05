@@ -6,9 +6,10 @@ from duck.frontend.wxwidgets.nicelist import NiceListSearchableCtrl
 class PlaylistCtrl(NiceListSearchableCtrl):
 
     def __init__(self, *args, **kwargs):
-        kwargs['columns'] = (('Pos',       50),
+        kwargs['columns'] = (('Pos',       20),
                              ('Artist',    200),
                              ('Title',     200),
+                             ('Album',     200),
                              ('Duration',  100))
         kwargs['search_columns'] = [1, 2]
         NiceListSearchableCtrl.__init__(self, 
@@ -32,6 +33,7 @@ class PlaylistCtrl(NiceListSearchableCtrl):
                 str(song.pos + 1),
                 song.artist,
                 song.title,
+                song.album,
                 str(song.time),
             ))
         self.load_data(data)

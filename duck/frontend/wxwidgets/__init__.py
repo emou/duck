@@ -50,6 +50,7 @@ class DuckWindow(MainWindow):
         # Event bindings
         self.Connect(-1, -1, ChangesEvent.CHANGES_EVT_ID, self.refresh)
         self.Bind(wx.EVT_TIMER, self.update_progress)
+        self.Bind(wx.EVT_MENU, self.do_rescan_database, self.item_rescan)
         self.progress_slider.Bind(wx.EVT_SLIDER, self.do_seek)
         self.volume_slider.Bind(wx.EVT_SLIDER, self.do_volume_set)
 
@@ -170,6 +171,10 @@ class DuckWindow(MainWindow):
     def do_add_album(self, event):
         self.backend.add_album(event.GetItem().GetText())
         wx.PostEvent(self, ChangesEvent(['playlist']))
+
+    @command
+    def do_rescan_database(self, event):
+        self.backend.rescan_database()
 
     def on_play(self):
         self.progress_slider.Enable(True)
