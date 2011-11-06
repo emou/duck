@@ -1,32 +1,23 @@
 == Duck
+A musical player written in Python.
 
-NOTICE: This program is not very usable at the moment.
+== Backends
+Currently supports mpd only.
 
-A simple musical player for Linux systems. Currently supports an MPD backend
-and wxWidgets frontend only. The future plan is to support different backends
-and frontends.
+== Frontends
+Currently supports wxwidgets only.
+
+== Status
+Early pre-alpha stage. Not really usable.
 
 == Installation
+No installation currently.
 
-There isn't a proper installation yet, so you basically just run 'main.py' like this:
+== Issues
+Use github tracker.
 
-$ cd duck && ./main.py
-
-or by explicitly pointing to the interpreter
-
-$ cd duck && /usr/bin/python2 ./main.py
-
-=== System requirements
-
-- Linux OS
-- Python 2.6 (version 3 is not yet supported)
-
-=== Dependencies
-
+== Dependencies
 - wxpython
 - python-mpd
 - mpd
-
-You should start the mpd server with the default method for starting services
-in your distribution.
 
