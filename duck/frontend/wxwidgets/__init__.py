@@ -1,4 +1,6 @@
-from duck.errors import FrontendInitializeError, BackendInitializeError, FatalError
+import sys
+
+from duck.errors import FrontendInitializeError
 try:
     import wx
 except ImportError:
@@ -15,6 +17,7 @@ else:
 from duck.frontend import BaseFrontend
 from duck.frontend.wxwidgets.events import ChangesEvent
 from duck.log import loggers
+from duck.utils import Poller
 from gui.noname import MainWindow
 
 logger = loggers.main
@@ -37,6 +40,18 @@ class DuckWindow(MainWindow):
         'volume_slider',
     ])
 
+    def try_to_initialize_backend(self):
+        self.backend.initialize()
+
+    def handle_backend_error(self, e):
+        logger.error('Error starting up backend: %s.' % e)
+
+    def handle_backend_success(self, res):
+        logger.debug('Connected!')
+        self.playlist.refresh()
+        self.reload_library()
+        self.update_status()
+        self.backend.idle()
 
     def __init__(self, *args, **kwargs):
         assert 'backend' in kwargs
@@ -54,6 +69,12 @@ class DuckWindow(MainWindow):
         self.progress_slider.Bind(wx.EVT_SLIDER, self.do_seek)
         self.volume_slider.Bind(wx.EVT_SLIDER, self.do_volume_set)
 
+        self.initialize_poller = Poller(
+            try_func=self.try_to_initialize_backend,
+            exception_handler=self.handle_backend_error,
+            success_handler=self.handle_backend_success,
+        )
+
     def initialize(self):
         self.playlist.set_search_field(self.playlist_search)
         self.artist_list.set_search_field(self.library_search_field)
@@ -67,24 +88,7 @@ class DuckWindow(MainWindow):
         for c in [self.playlist, self.artist_list, self.album_list, self.song_list]:
             c.initialize(self)
 
-        initialized = False
-        while not initialized:
-            try:
-                self.backend.initialize()
-                initialized = True
-            except BackendInitializeError, e:
-                dlg = wx.MessageDialog(
-                    None,
-                    str(e),
-                    'Error while initializing backend'
-                )
-                choice = dlg.ShowModal()
-                if choice != wx.ID_OK:
-                    raise FatalError()
-        self.playlist.refresh()
-        self.reload_library()
-        self.update_status()
-        self.backend.idle()
+        self.initialize_poller.start()
 
     def handle_changes(self, changes, skip_updates=None):
         if changes:
