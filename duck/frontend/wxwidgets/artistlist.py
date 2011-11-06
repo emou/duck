@@ -1,7 +1,7 @@
 import wx
 import duck.frontend.wxwidgets
 
-from duck.frontend.wxwidgets.nicelist import NiceListSearchableCtrl
+from duck.frontend.wxwidgets.ducklist import Column, DuckListSearchableCtrl
 
 class ArtistContextMenu(wx.Menu):
     ADD_ID = 1
@@ -29,11 +29,11 @@ class ArtistContextMenu(wx.Menu):
         wx.PostEvent(self.main_window,
                      duck.frontend.wxwidgets.events.ChangesEvent(['playlist']))
 
-class ArtistListCtrl(NiceListSearchableCtrl):
+class ArtistListCtrl(DuckListSearchableCtrl):
     def __init__(self, *args, **kwargs):
-        kwargs['columns'] = (('Artist', None),)
+        kwargs['columns'] = (Column(name='Artist'),)
         kwargs['search_columns'] = [0]
-        NiceListSearchableCtrl.__init__(self, *args, **kwargs)
+        DuckListSearchableCtrl.__init__(self, *args, **kwargs)
 
     def initialize(self, main_window, *args, **kwargs):
         self.main_window = main_window

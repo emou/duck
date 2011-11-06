@@ -13,7 +13,7 @@ else:
 
 
 from duck.frontend import BaseFrontend
-from duck.frontend.wxwidgets.events import ChangesEvent
+from duck.frontend.wxwidgets.events import ChangesEvent, BackendConnectedEvent
 from duck.log import loggers
 from duck.utils import Poller
 from gui.noname import MainWindow
@@ -46,6 +46,9 @@ class DuckWindow(MainWindow):
 
     def handle_backend_success(self, res):
         logger.debug('Connected!')
+        wx.PostEvent(self, BackendConnectedEvent())
+
+    def connected(self, evt):
         self.playlist.refresh()
         self.reload_library()
         self.update_status()
@@ -62,6 +65,7 @@ class DuckWindow(MainWindow):
 
         # Event bindings
         self.Connect(-1, -1, ChangesEvent.CHANGES_EVT_ID, self.refresh)
+        self.Connect(-1, -1, BackendConnectedEvent.BACKEND_CONNECTED_EVT_ID, self.connected)
         self.Bind(wx.EVT_TIMER, self.update_progress)
         self.Bind(wx.EVT_MENU, self.do_rescan_database, self.item_rescan)
         self.progress_slider.Bind(wx.EVT_SLIDER, self.do_seek)

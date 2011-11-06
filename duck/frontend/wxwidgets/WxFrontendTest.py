@@ -11,6 +11,7 @@ class SongMock(object):
         self.pos = kwargs.pop('pos')
         self.artist = kwargs.pop('artist')
         self.title = kwargs.pop('title')
+        self.album = kwargs.pop('album')
         self.time = kwargs.pop('time', 30)
     
     @property
@@ -22,9 +23,12 @@ class PlaylistMock(object):
     def __init__(self, songs=None):
         if songs is None:
             self.songs = [
-                SongMock(pos=0, artist='Morphine', title='Sharks', time=300),
-                SongMock(pos=1, artist='Pearl Jam', title='I am alive', time=200),
-                SongMock(pos=2, artist='3 Doors Down', title='I\'m a looser', time=400),
+                SongMock(pos=0, artist='Morphine', title='Sharks',
+                         album='Yes', time=300),
+                SongMock(pos=1, artist='Pearl Jam', title='Alive',
+                         album='Ten', time=200),
+                SongMock(pos=2, artist='3 Doors Down', title='Loser',
+                         album='The Better Life', time=400),
             ]
         else:
             self.songs = songs

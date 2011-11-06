@@ -75,6 +75,7 @@ class Poller(threading.Thread):
             sleep_generator: a generator that determines sleep interval change
         """
         threading.Thread.__init__(self)
+        self.setDaemon(True)
 
         self.try_func = try_func
         self.success_handler = success_handler

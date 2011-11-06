@@ -1,19 +1,22 @@
 import wx
 
 import duck.frontend.wxwidgets
-from duck.frontend.wxwidgets.nicelist import NiceListSearchableCtrl
+from duck.frontend.wxwidgets.ducklist import Column, FixedWidthColumn, DuckListSearchableCtrl
 
-class PlaylistCtrl(NiceListSearchableCtrl):
+class PlaylistCtrl(DuckListSearchableCtrl):
 
     def __init__(self, *args, **kwargs):
-        kwargs['columns'] = (('Pos',       20),
-                             ('Artist',    200),
-                             ('Title',     200),
-                             ('Album',     200),
-                             ('Duration',  100))
-        kwargs['search_columns'] = [1, 2]
-        NiceListSearchableCtrl.__init__(self, 
-                                        *args, **kwargs)
+        kwargs['columns'] = [
+            FixedWidthColumn(name='pos', initial_width=50),
+            Column(name='Artist',        initial_width=200),
+            Column(name='Title',         initial_width=200),
+            Column(name='Album',         initial_width=200),
+            Column(name='Duration',      initial_width=100),
+        ]
+        kwargs['search_columns'] = [
+            1, 2,
+        ]
+        DuckListSearchableCtrl.__init__(self, *args, **kwargs)
         # The wx.App object must be created first for this to work!
         self.NORMAL_FONT = wx.Font(10, wx.FONTFAMILY_DEFAULT,
                                    wx.FONTSTYLE_NORMAL, wx.NORMAL)

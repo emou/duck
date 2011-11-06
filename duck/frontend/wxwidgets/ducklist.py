@@ -1,11 +1,29 @@
 import wx
 
-class ListCtrlIncrementalSearchMixin(object):
+class Column(object):
+    """
+    Column objects should passed to
+    """
+    resizeable = True
+    def __init__(self, name, initial_width=None):
+        self.name = name
+        self.initial_width = initial_width
+
+class FixedWidthColumn(Column):
+    """
+    Ignores width adjustment
+    """
+    resizeable = False
+
+class _ListCtrlIncrementalSearchMixin(object):
+    """
+    WARNING: class internal to this module.
+    """
     SEARCH_KEY = ord('/')
 
     def __init__(self, search_field, columns, search_columns):
         """
-        Initializes a new ListCtrlIncrementalSearchMixin.
+        Initializes a new _ListCtrlIncrementalSearchMixin.
         `search_field` is a SearchField instance to which we should attach.
         Letting users pass this as a parameter lets them create it however they want.
 
@@ -24,18 +42,18 @@ class ListCtrlIncrementalSearchMixin(object):
                                    wx.FONTSTYLE_NORMAL, wx.NORMAL)
         # The only way I was able to find to actually guarantee that these
         # methods will be looked up from our mixin.
-        self.__class__.OnGetItemText = ListCtrlIncrementalSearchMixin.OnGetItemText
-        self.__class__.OnGetItemImage = ListCtrlIncrementalSearchMixin.OnGetItemImage
-        self.__class__.OnGetItemAttr = ListCtrlIncrementalSearchMixin.OnGetItemAttr
+        self.__class__.OnGetItemText = _ListCtrlIncrementalSearchMixin.OnGetItemText
+        self.__class__.OnGetItemImage = _ListCtrlIncrementalSearchMixin.OnGetItemImage
+        self.__class__.OnGetItemAttr = _ListCtrlIncrementalSearchMixin.OnGetItemAttr
 
         if not self.HasFlag(wx.LC_VIRTUAL):
             raise ValueError(
-                'ListCtrlIncrementalSearchMixin works on virtual '
+                '_ListCtrlIncrementalSearchMixin works on virtual '
                 'lists only (set wx.LC_VIRTUAL style)'
             )
         if not self.HasFlag(wx.LC_REPORT):
             raise ValueError(
-                'ListCtrlIncrementalSearchMixin works on lists in '
+                '_ListCtrlIncrementalSearchMixin works on lists in '
                 'report view only (set wx.LC_REPORT style)'
             )
         try:
@@ -45,11 +63,12 @@ class ListCtrlIncrementalSearchMixin(object):
                 'search_columns should be a list of zero-based '
                 'indexes of columns that we should search for'
             )
+        self.columns = columns
         for i, col in enumerate(columns):
-            if col[1] is not None:
-                self.InsertColumn(i, col[0], col[1])
+            if col.initial_width is not None:
+                self.InsertColumn(i, col.name, col.initial_width)
             else:
-                self.InsertColumn(i, col[0])
+                self.InsertColumn(i, col.name)
         if search_field is not None:
             self.set_search_field(search_field)
         else:
@@ -142,12 +161,12 @@ class ListCtrlIncrementalSearchMixin(object):
     def SetItemState(self, item, st, st_mask, convert=True):
         if convert:
             item = self.get_reverse_position(item)
-        return super(ListCtrlIncrementalSearchMixin, self).SetItemState(item, st, st_mask)
+        return super(_ListCtrlIncrementalSearchMixin, self).SetItemState(item, st, st_mask)
 
     def EnsureVisible(self, item, convert=True):
         if convert:
             item = self.get_reverse_position(item)
-        super(ListCtrlIncrementalSearchMixin, self).EnsureVisible(item)
+        super(_ListCtrlIncrementalSearchMixin, self).EnsureVisible(item)
 
     def GetItemFont(self, item, convert=True):
         if convert:
@@ -196,8 +215,10 @@ class ListCtrlIncrementalSearchMixin(object):
         return indexes
 
 
-class ListCtrlAutoRelativeWidthMixin(object):
-    """ A mix-in class that automatically fits columns in a ListCtrl.
+class _ListCtrlAutoRelativeWidthMixin(object):
+    """
+        WARNING: class internal to this module.
+
         Uses wx.LIST_AUTOSIZE internally. Then just expands the columns keeping
         their relative sizes.
 
@@ -206,21 +227,7 @@ class ListCtrlAutoRelativeWidthMixin(object):
         WARNING: If you override the EVT_SIZE event in your wx.ListCtrl, make
                  sure you call event.Skip() to ensure that the mixin's
                  _OnResize method is called.
-
-        This mix-in class was written by Emil Stanchev <stanchev.emil@gmail.com>
     """
-    # Author of the original code, which I modified:
-    #----------------------------------------------------------------------------
-    # Name:        wxPython.lib.mixins.listctrl
-    # Purpose:     Helpful mix-in classes for wxListCtrl
-    #
-    # Author:      Robin Dunn
-    #
-    # Created:     15-May-2001
-    # RCS-ID:      $Id: listctrl.py 63322 2010-01-30 00:59:55Z RD $
-    # Copyright:   (c) 2001 by Total Control Software
-    # Licence:     wxWindows license
-    #----------------------------------------------------------------------------
 
     def __init__(self):
         """ Standard initializer.
@@ -250,8 +257,13 @@ class ListCtrlAutoRelativeWidthMixin(object):
 
         if self.GetSize().height < 32:
             return  # avoid an endless update bug when the height is small.
-        
+
+        has_columns = hasattr(self, 'columns')
         numCols = self.GetColumnCount()
+
+        # XXX: Cleanup this check.
+        if has_columns:
+            assert len(self.columns) == numCols
         if numCols == 0:
             return
 
@@ -267,10 +279,76 @@ class ListCtrlAutoRelativeWidthMixin(object):
         for col in range(numCols):
             self.SetColumnWidth(col, wx.LIST_AUTOSIZE)
 
-        totColWidth = sum(self.GetColumnWidth(col) for col in range(numCols))
-        totColWidth = max(1, totColWidth)
-        freeWidth = listWidth - totColWidth
+        if has_columns:
+            total_resizeable = 0
+            free_width = listWidth
+            for i, c in enumerate(self.columns):
+                w = self.GetColumnWidth(i)
+                if c.resizeable:
+                    total_resizeable += w
+                free_width -= w
 
-        for c in range(numCols):
-            w = self.GetColumnWidth(c)
-            self.SetColumnWidth(c, w + freeWidth*w/totColWidth)
+            for i, c in enumerate(self.columns):
+                if c.resizeable:
+                    w = self.GetColumnWidth(i)
+                    self.SetColumnWidth(i, w + free_width*w/total_resizeable)
+        else:
+            # XXX: Cleanup this branch.
+            totColWidth = sum(self.GetColumnWidth(col) for col in range(numCols))
+            totColWidth = max(1, totColWidth)
+            freeWidth = listWidth - totColWidth
+
+            for c in range(numCols):
+                w = self.GetColumnWidth(c)
+                self.SetColumnWidth(c, w + freeWidth*w/totColWidth)
+
+class DuckListCtrl(wx.ListCtrl, _ListCtrlAutoRelativeWidthMixin):
+
+    def __init__(self, *args, **kwargs):
+        wx.ListCtrl.__init__(self, *args, **kwargs)
+        _ListCtrlAutoRelativeWidthMixin.__init__(self)
+
+
+class DuckListSearchableCtrl(_ListCtrlIncrementalSearchMixin, wx.ListCtrl, _ListCtrlAutoRelativeWidthMixin):
+
+    def __init__(self, *args, **kwargs):
+        # Ensure we're using a virtual list in report view.
+        if len(args) > 4:
+            args = list(args)
+            args[4] |= wx.LC_VIRTUAL | wx.LC_REPORT
+        else:
+            kwargs['style'] = kwargs.get('style', 0) | wx.LC_VIRTUAL | wx.LC_REPORT
+        search_field = kwargs.pop('search_field', None)
+        search_columns = kwargs.pop('search_columns')
+        columns = kwargs.pop('columns')
+        wx.ListCtrl.__init__(self, *args, **kwargs)
+        _ListCtrlAutoRelativeWidthMixin.__init__(self)
+        _ListCtrlIncrementalSearchMixin.__init__(
+            self,
+            search_field=search_field, 
+            columns=columns,
+            search_columns=search_columns
+        )
+
+
+class DuckSingleColumnListCtrl(DuckListCtrl):
+
+    def load(self, values):
+        """
+        Replaces all items with new ones, containing `values`.
+        """
+        self.DeleteAllItems()
+        for row, a in enumerate(values):
+            item = wx.ListItem()
+            item.SetId(row + 1)
+            item.SetText(a)
+            self.InsertItem(item)
+
+
+if __name__ == '__main__':
+    app = wx.App()
+    frame = wx.Frame(None, wx.ID_ANY, "Test ducklist.py")
+    frame.Show()
+    win = DuckListSearchableCtrl(frame, search_columns=[0], columns=[Column(name='Foo', initial_width=100)])
+    win.load_data([('A',), ('B',), ('C',),])
+    app.MainLoop()

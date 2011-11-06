@@ -1,16 +1,18 @@
 import unittest
 import wx
 
-from duck.frontend.wxwidgets.mixins import ListCtrlIncrementalSearchMixin
+from duck.frontend.wxwidgets.ducklist import ListCtrlIncrementalSearchMixin, Column
 
 class MyAutoCompleteCtrl(ListCtrlIncrementalSearchMixin, wx.ListCtrl):
     DEFAULT_SEARCH_COLUMNS = [0]
     DATA=[('Alice',), ('Bob',), ('Ben',), ('Chuck',)]
 
     def __init__(self, *args, **kwargs):
-        search_columns = kwargs.pop('search_columns',
-                                    self.DEFAULT_SEARCH_COLUMNS)
-        columns = kwargs.pop('columns', (('Name',      None),))
+        search_columns = kwargs.pop(
+            'search_columns',
+            self.DEFAULT_SEARCH_COLUMNS,
+        )
+        columns = kwargs.pop('columns', Column(name='Name'))
         wx.ListCtrl.__init__(self, *args, **kwargs)
         ListCtrlIncrementalSearchMixin.__init__(self,
                                                 search_field=wx.TextCtrl(self),
@@ -32,7 +34,7 @@ class IncrementalSearchMixinInitializeTest(unittest.TestCase):
                         self,
                         search_field=wx.TextCtrl(self),
                         search_columns=[0],
-                        columns=(('Name', None),)
+                        columns=(Column('Name', None),),
                     )
             self.assertRaises(ValueError,
                               MyAutoCompleteNoColumns, self.parent_frame)

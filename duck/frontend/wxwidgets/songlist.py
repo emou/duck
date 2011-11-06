@@ -1,8 +1,8 @@
 import wx
 
-from duck.frontend.wxwidgets.nicelist import NiceListCtrl
+from duck.frontend.wxwidgets.ducklist import DuckListCtrl
 
-class SongListCtrl(NiceListCtrl):
+class SongListCtrl(DuckListCtrl):
 
     def initialize(self, main_window):
         self.main_window = main_window
