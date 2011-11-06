@@ -11,7 +11,7 @@ class PlaylistCtrl(DuckListSearchableCtrl):
             Column(name='Artist',        initial_width=200),
             Column(name='Title',         initial_width=200),
             Column(name='Album',         initial_width=200),
-            Column(name='Duration',      initial_width=100),
+            FixedWidthColumn(name='Duration',      initial_width=50),
         ]
         kwargs['search_columns'] = [
             1, 2,
