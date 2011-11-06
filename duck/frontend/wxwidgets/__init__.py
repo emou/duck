@@ -1,5 +1,3 @@
-import sys
-
 from duck.errors import FrontendInitializeError
 try:
     import wx
