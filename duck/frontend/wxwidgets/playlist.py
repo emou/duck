@@ -7,7 +7,6 @@ class PlaylistCtrl(DuckListSearchableCtrl):
 
     def __init__(self, *args, **kwargs):
         kwargs['columns'] = [
-            FixedWidthColumn(name='pos', initial_width=50),
             Column(name='Artist',        initial_width=200),
             Column(name='Title',         initial_width=200),
             Column(name='Album',         initial_width=200),
@@ -33,7 +32,6 @@ class PlaylistCtrl(DuckListSearchableCtrl):
         self.songs = self.main_window.backend.playlist.songs
         for row, song in enumerate(self.songs):
             data.append((
-                str(song.pos + 1),
                 song.artist,
                 song.title,
                 song.album,
